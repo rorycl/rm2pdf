@@ -1,4 +1,4 @@
-module rorycl.net/rm2pdf
+module github.com/rorycl/rm2pdf
 
 go 1.13
 

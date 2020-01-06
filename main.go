@@ -11,7 +11,7 @@ import (
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
 	"os"
-	rmpdf "rorycl.net/rm2pdf/rmpdf"
+	rmpdf "github.com/rorycl/rm2pdf/rmpdf"
 )
 
 const usage = `InputPath OutputFile

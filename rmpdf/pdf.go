@@ -13,8 +13,8 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
 	"os"
-	"rorycl.net/rm2pdf/rmparse"
-	"rorycl.net/rm2pdf/files"
+	"github.com/rorycl/rm2pdf/rmparse"
+	"github.com/rorycl/rm2pdf/files"
 )
 
 // reMarkable png templates (in /usr/share/remarkable/templates) are
