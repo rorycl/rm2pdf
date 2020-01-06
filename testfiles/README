@@ -1,0 +1,83 @@
+testfiles.README
+
+The files in this directory are from the xochitl directory on a
+reMarkable tablet. The cc8313bb-5fab-4ab5-af39-46e6d4160df3 files (or
+"rm bundle") are associated with a single two page PDF file,
+cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf. The PDF has the following
+files and directories associated with it at the same directory level
+structure:
+
+    .cache          : directory of unknown purpose
+    .content        : json state and metadata file
+    .highlights     : directory of unknown purpose
+    .metadata       : simple metadata about the file, including last
+                      modification time and name on the tablet interface
+    .pagedata       : a curiously structured file, perhaps referring to
+                      the tablet background templates used for this
+                      document
+    .pdf            : this pdf file
+    .textconversion : directory presumably containing text extracted
+                      from the ocr function
+    .thumbnails     : jpeg thumbnails generated on the device for use on
+                      the tablet interface
+
+In a directory with the same uuid as the PDF are two files for each page
+of the PDF:
+
+    .json-metadata  : a json file setting out the layers in the file
+    .rm             : reMarkable binary file describing the lines drawn
+                      on the page
+
+The order of pages is set out in the .content file, for example:
+
+    "pages": [
+        "da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224",
+        "7794dbce-2506-4fb0-99fd-9ec031426d57"
+    ],
+
+The reMarkable_output.pdf file is a PDF created through the reMarkable
+app. The base 2 page PDF was cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf
+which was A4 size. The output is 225.95501 x 300.72971 mm or 640.50239 x
+852.46217 points (A4 is 210 x 297 mm or 595.27559 x 841.88976 points).
+
+The active field of points is therefore something like 2630168.5776
+units, which are represented in an area of 530396.63104 inkscape points
+in the reMarkable output PDF file. The saved reMarkable file has 3.9370
+px/mm according to Gimp. 
+
+File tree
+
+    ./
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3
+    │   ├── 7794dbce-2506-4fb0-99fd-9ec031426d57-metadata.json
+    │   ├── 7794dbce-2506-4fb0-99fd-9ec031426d57.rm
+    │   ├── da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224-metadata.json
+    │   └── da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224.rm
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.cache
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.content
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.highlights
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.metadata
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.pagedata
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.textconversion
+    ├── cc8313bb-5fab-4ab5-af39-46e6d4160df3.thumbnails
+    │   ├── 7794dbce-2506-4fb0-99fd-9ec031426d57.jpg
+    │   └── da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224.jpg
+    └── reMarkable_output.pdf
+
+Additional files include 7cbc50c9-8d68-48cf-8f77-e70f2e87b732.rm, an .rm
+file with only a header, and the bundle associated with
+d34df12d-e72b-4939-a791-5b34b3a810e7, which is a one-page .rm notebook.
+
+	.
+	├── 7cbc50c9-8d68-48cf-8f77-e70f2e87b732.rm
+	├── d34df12d-e72b-4939-a791-5b34b3a810e7
+	│   ├── 2c277cdb-79a5-4f69-b583-4901d944e77e-metadata.json
+	│   └── 2c277cdb-79a5-4f69-b583-4901d944e77e.rm
+	├── d34df12d-e72b-4939-a791-5b34b3a810e7.content
+	├── d34df12d-e72b-4939-a791-5b34b3a810e7.metadata
+	├── d34df12d-e72b-4939-a791-5b34b3a810e7.pagedata
+	├── d34df12d-e72b-4939-a791-5b34b3a810e7.thumbnails
+	│   └── 2c277cdb-79a5-4f69-b583-4901d944e77e.jpg
+	└── reMarkable_output.pdf
+
