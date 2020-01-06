@@ -75,4 +75,4 @@ Build : `go build`; this should produce an executable called `rm2svg`.
 
 ## License
 
-This project is licensed under the [LICENSE](MIT License).
+This project is licensed under the [MIT Licence](LICENCE).
