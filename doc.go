@@ -4,8 +4,8 @@ rm2pdf
 MIT Licensed
 RCL January 2020
 
+
 Introduction
-------------
 
 This programme attempts to create annotated A4 PDF files from reMarkable
 tablet file groups (RM bundles), including .rm files recording marks.
@@ -51,7 +51,6 @@ Warning: OutputFile will be overwritten if it exists.
 
 
 reMarkable .rm file parser
---------------------------
 
 The parser is a go port of reMarkable tablet "lines" or ".rm" file
 parser, with binary decoding hints drawn from rm2svg
@@ -67,8 +66,8 @@ iterates over the referenced reMarkable .rm file returning a data
 structure consisting of each path with its associated layer and path
 segments.
 
+
 PDF paths, strokes and colours
-------------------------------
 
 Pen selections are hard-coded in stroke.go with widths, opacities and
 colours. The StrokeSetting interface "Width" is used to scale strokes
@@ -86,5 +85,4 @@ testfiles directory.
 To view the testfiles after processing use or alter the paths used in
 the tests.
 */
-
 package main
