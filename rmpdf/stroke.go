@@ -130,14 +130,6 @@ func (s *StrokeSetting) Width(penwidth float32) float64 {
 	return float64(r)
 }
 
-// Return the rbg components of the stroke's colour
-func (s *StrokeSetting) toRGB() (int, int, int) {
-	r := int(s.Colour.R)
-	g := int(s.Colour.G)
-	b := int(s.Colour.B)
-	return int(r), int(g), int(b)
-}
-
 // Given a colour, determine if the stroke is overrideable (using the
 // ColourOverride attribute); if so return the RGB of the
 // given colour, else return the RGB of the native colour
@@ -155,8 +147,3 @@ func (s *StrokeSetting) selectColour(lc *LocalColour) (int, int, int) {
 	b := int(c.B)
 	return int(r), int(g), int(b)
 }
-
-// Return the cmyk components of the stroke's colour
-// func (s *StrokeSetting) toCMYK() color.CMYK {
-// 	return color.CMYKModel.Convert(s.Colour)
-// }
