@@ -148,7 +148,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf)
 			UnknownPens[int(path.Pen)]++
 			ss = StrokeSettings["fineliner"]
 		}
-		pdf.SetDrawColor(ss.selectColour(&layerCustomColour))
+		pdf.SetDrawColor(ss.selectColour(&layerCustomColour, path.Colour))
 		// pdf.SetFillSpotColor("White", 100) // 0% tint
 		pdf.SetLineWidth(ss.Width(path.Width))
 		if ss.Opacity != 1.0 {

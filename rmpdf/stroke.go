@@ -26,7 +26,7 @@ import (
 // ColourOverride property determines if the colour of the stroke may be
 // manually overridden by command-line options.
 type StrokeSetting struct {
-	Colour         color.RGBA
+	Colour         map[int]color.RGBA
 	StdWidth       float32
 	Opacity        float64
 	ColourOverride bool
@@ -54,57 +54,57 @@ var StrokeMap = map[int]string{
 // Set of pen default settings
 var StrokeSettings = map[string]StrokeSetting{
 	"pen": {
-		Colour:         colornames.Black,
+		Colour:         map[int]color.RGBA{ 0:colornames.Black, 1:colornames.Gray, 2:colornames.White },
 		StdWidth:       2.0,
 		Opacity:        1,
 		ColourOverride: true,
 	},
 	"highlighter": {
-		Colour:         colornames.Blue,
+		Colour:         map[int]color.RGBA{0:colornames.Yellow},
 		StdWidth:       15.0,
 		Opacity:        0.4,
 		ColourOverride: true,
 	},
 	"fineliner": {
-		Colour:         colornames.Blue,
+		Colour:         map[int]color.RGBA{ 0:colornames.Black, 1:colornames.Darkgray, 2:colornames.White },
 		StdWidth:       1.0,
 		Opacity:        1,
 		ColourOverride: true,
 	},
 	"marker": {
-		Colour:         colornames.Black,
+		Colour:         map[int]color.RGBA{ 0:colornames.Red, 1:colornames.Green, 2:colornames.White },
 		StdWidth:       3.8,
 		Opacity:        1,
 		ColourOverride: true,
 	},
 	"ballpoint": {
 		// Colour  : color.RGBA{68, 68, 68, 225}, // greyish
-		Colour:   colornames.Slategray,
+		Colour:   map[int]color.RGBA{ 0:colornames.Darkslateblue, 1:colornames.Green, 2:color.RGBA{220, 220, 220, 220} },
 		StdWidth: 1.75,
 		Opacity:  0.8,
 	},
 	"pencil": {
-		Colour:   colornames.Black,
+		Colour:   map[int]color.RGBA{0:colornames.Black},
 		StdWidth: 1.9,
 		Opacity:  1,
 	},
 	"mechanical pencil": {
-		Colour:   colornames.Black,
+		Colour:   map[int]color.RGBA{0:colornames.Black},
 		StdWidth: 1.2,
 		Opacity:  0.7,
 	},
 	"paint": {
-		Colour:   color.RGBA{55, 55, 55, 220}, // dark grey
+		Colour:   map[int]color.RGBA{ 0:color.RGBA{55, 55, 55, 220}, 1:color.RGBA{88, 88, 88, 220}, 2:color.RGBA{220, 220, 220, 220} },
 		StdWidth: 4.8,
 		Opacity:  0.8,
 	},
 	"eraser": {
-		Colour:   colornames.White,
+		Colour:   map[int]color.RGBA{0:colornames.White},
 		StdWidth: 9.0,
 		Opacity:  0,
 	},
 	"erase area": {
-		Colour:   colornames.White,
+		Colour:   map[int]color.RGBA{0:colornames.White},
 		StdWidth: 9.0,
 		Opacity:  0,
 	},
@@ -133,15 +133,19 @@ func (s *StrokeSetting) Width(penwidth float32) float64 {
 // Given a colour, determine if the stroke is overrideable (using the
 // ColourOverride attribute); if so return the RGB of the
 // given colour, else return the RGB of the native colour
-func (s *StrokeSetting) selectColour(lc *LocalColour) (int, int, int) {
+func (s *StrokeSetting) selectColour(lc *LocalColour, rmColour uint32) (int, int, int) {
 	c := color.RGBA{}
-	if lc.Name == "" || lc.Name == "empty" {
-		c = s.Colour
-	} else if !s.ColourOverride {
-		c = s.Colour
+
+	if lc.Name == "" || lc.Name == "empty"  || !s.ColourOverride {
+		foundColour, exists := s.Colour[int(rmColour)]
+		if(!exists) {
+			foundColour = s.Colour[0]
+		}
+		c = foundColour
 	} else {
 		c = lc.Colour
 	}
+
 	r := int(c.R)
 	g := int(c.G)
 	b := int(c.B)
