@@ -122,6 +122,7 @@ func TestRMParse(t *testing.T) {
 
 }
 
+// rmparse can now deal with corrupt files
 func TestRMParseCorrupt(t *testing.T) {
 
 	filer, err := os.Open("../testfiles/7cbc50c9-8d68-48cf-8f77-e70f2e87b732.rm")
@@ -138,8 +139,30 @@ func TestRMParseCorrupt(t *testing.T) {
 	for rm.Parse() {
 		ok = false // should not get here
 	}
+	if ok == true {
+		t.Error("The corrupted rm file was skipped parsing")
+	}
+
+}
+
+func TestRMParseEmptyLayers(t *testing.T) {
+
+	filer, err := os.Open("../testfiles/54abf601-2e54-44d3-85d6-17c8c1472ef0.rm")
+	if err != nil {
+		t.Errorf("Could not open corrupt rm file %v", err)
+	}
+	defer filer.Close()
+
+	rm, err := RMParse(filer)
+	if err != nil {
+		t.Error("The layer file could not be setup for parsing")
+	}
+	ok := true
+	for rm.Parse() {
+		//
+	}
 	if ok != true {
-		t.Error("The corrupted rm file could not be parsed")
+		t.Error("The layered rm file could not be parsed")
 	}
 
 }

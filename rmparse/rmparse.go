@@ -158,26 +158,27 @@ func (rm *RMFile) Parse() bool {
 		return false
 	}
 
-	// get next path
-	path, err := ParsePath(rm.File)
-	if err == io.ErrUnexpectedEOF {
-		return false
-	} else if err != nil {
-		panic("ParsePath failed")
-	}
+	// some layers are empty
+	if rm.PathNo > 0 {
 
-	rm.Path.Layer = rm.ThisLayer
-	rm.Path.Path = path
-
-	// retrieve segments
-	for s := 1; s <= int(rm.Path.Path.NumSegments); s++ {
-		segment, err := ParseSegment(rm.File)
-		if err == io.ErrUnexpectedEOF {
-			return false
-		} else if err != nil {
-			panic("ParseSegment failed")
+		// get next path
+		path, err := ParsePath(rm.File)
+		if err != nil {
+			panic("ParsePath failed")
 		}
-		rm.Path.Segments = append(rm.Path.Segments, segment)
+
+		rm.Path.Layer = rm.ThisLayer
+		rm.Path.Path = path
+
+		// retrieve segments
+		for s := 1; s <= int(rm.Path.Path.NumSegments); s++ {
+			segment, err := ParseSegment(rm.File)
+			if err != nil {
+				panic("ParseSegment failed")
+			}
+			rm.Path.Segments = append(rm.Path.Segments, segment)
+		}
+
 	}
 
 	// increment path counter
@@ -245,7 +246,9 @@ func ParseSegment(f *os.File) (Segment, error) {
 	sg := Segment{}
 
 	err := binary.Read(f, binary.LittleEndian, &sg)
-	if err == io.ErrUnexpectedEOF {
+	if err == io.EOF {
+		return sg, err
+	} else if err == io.ErrUnexpectedEOF {
 		return sg, err
 	} else if err != nil {
 		panic(err)
