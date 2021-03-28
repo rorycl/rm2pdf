@@ -10,11 +10,12 @@ package rmpdf
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
-	"os"
-	"github.com/rorycl/rm2pdf/rmparse"
 	"github.com/rorycl/rm2pdf/files"
+	"github.com/rorycl/rm2pdf/rmparse"
 )
 
 // reMarkable png templates (in /usr/share/remarkable/templates) are
@@ -235,7 +236,7 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 	if len(UnknownPens) > 0 {
 		fmt.Println("Some pen types were not found, and were forced to the fineliner style")
 		for k, v := range UnknownPens {
-			fmt.Printf("pen: %02d occurrences: %d", k, v)
+			fmt.Printf("pen: %02d occurrences: %d\n", k, v)
 		}
 	}
 
