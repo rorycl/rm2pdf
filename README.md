@@ -1,6 +1,6 @@
 # rm2pdf
 
-version 0.0.1-alpha
+version 0.0.2
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
@@ -51,6 +51,8 @@ Some PDF files, notably those created by Microsoft Word, cannot be imported
 reliably, causing the programme to panic. Reprocessing problem PDFs with the
 `pdftk` tool seems to fix the problem.
 
+Note that rm2pdf has only been tested on a reMarkable v1 tablet.
+
 ## Background
 
 This is a holiday project to learn go. Error handling in particular is pretty
@@ -65,9 +67,12 @@ The project makes extensive use of the go PDF `fpdf` library and the contrib
 module `gofpdi`. The latter is used for including pages from existing PDF
 documents.
 
+If your pdf causes fpdf to fail, resave the pdf using the `pdftk`
+programme.
+
 ### Build and test
 
-Developed with go 1.13 on 64bit Linux.
+Developed with go 1.15 on 64bit Linux.
 
 Test:  `go test -v ./...`
 
