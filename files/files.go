@@ -9,19 +9,19 @@ package files
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-// struct defining the collected metadata about a PDF from the
-// reMarkable file collection
+// RMFileInfo is a struct defining the collected metadata about a PDF
+// from the reMarkable file collection
 type RMFileInfo struct {
 	RelPDFPath   string // full relative path to PDF
 	Identifier   string // the uuid used to identify the PDF file
@@ -34,16 +34,17 @@ type RMFileInfo struct {
 	Debugging    bool
 }
 
+// Debug prints a message if the debugging switch is on
 func (r *RMFileInfo) Debug(d string) {
 	if r.Debugging {
 		fmt.Println(d)
 	}
 }
 
-// Struct defining metadata about each .rm file associated with the PDF
-// described in an RMFileInfo. Note that while the .content file records
-// page UUIDs for each page of the original PDF, .rm and related file
-// are only made for those pages which have marks
+// RMPage is a struct defining metadata about each .rm file associated
+// with the PDF described in an RMFileInfo. Note that while the .content
+// file records page UUIDs for each page of the original PDF, .rm and
+// related file are only made for those pages which have marks
 type RMPage struct {
 	PageNo     int
 	Identifier string   // the uuid used to identify the RM file
@@ -131,7 +132,7 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 
 	// verify uuid
 	if _, err := uuid.Parse(hUUID); err != nil {
-		return rm, errors.New(fmt.Sprintf("uuid %s is invalid", hUUID))
+		return rm, fmt.Errorf("uuid %s is invalid", hUUID)
 	}
 	rm.Identifier = hUUID
 
@@ -144,7 +145,7 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	if template != "" {
 		err := checkFileExists(template)
 		if err != nil {
-			return rm, errors.New(fmt.Sprintf("template %s not found", template))
+			return rm, fmt.Errorf("template %s not found", template)
 		}
 		rm.RelPDFPath = template
 		rm.UseTemplate = true
@@ -152,28 +153,27 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 		rm.RelPDFPath = fbase + ".pdf"
 	}
 
-	err := checkFileExists(rm.RelPDFPath)
-	if err != nil {
-		return rm, errors.New(fmt.Sprintf("PDF file %s not found", rm.RelPDFPath))
+	if err := checkFileExists(rm.RelPDFPath); err != nil {
+		return rm, fmt.Errorf("PDF file %s not found", rm.RelPDFPath)
 	}
-	checkFileExists(fmetadata)
-	if err != nil {
-		return rm, errors.New(fmt.Sprintf("PDF metadata file %s not found", fmetadata))
+
+	if err := checkFileExists(fmetadata); err != nil {
+		return rm, fmt.Errorf("PDF metadata file %s not found", fmetadata)
 	}
-	checkFileExists(fcontent)
-	if err != nil {
-		return rm, errors.New(fmt.Sprintf("PDF content file %s not found", fcontent))
+
+	if err := checkFileExists(fcontent); err != nil {
+		return rm, fmt.Errorf("PDF content file %s not found", fcontent)
 	}
 
 	// read metadata
 	body, err := ioutil.ReadFile(fmetadata)
 	if err != nil {
-		panic(err)
+		return rm, err
 	}
 	var p pdfMetadata
 	err = json.Unmarshal(body, &p)
 	if err != nil {
-		panic(err)
+		return rm, err
 	}
 
 	rm.Version = p.Version
@@ -183,12 +183,12 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	// read content
 	body, err = ioutil.ReadFile(fcontent)
 	if err != nil {
-		panic(err)
+		return rm, err
 	}
 	var c content
 	err = json.Unmarshal(body, &c)
 	if err != nil {
-		panic(err)
+		return rm, err
 	}
 
 	rm.PageCount = len(c.Pages)
