@@ -23,7 +23,7 @@ func ptime(ti string) time.Time {
 func TestFilesWithPDF(t *testing.T) {
 
 	template := ""
-	rmf, err := RMFiler("../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf", template)
+	rmf, err := RMFiler("../testfiles/xochitl/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf", template)
 	if err != nil {
 		t.Errorf("Could not open file %v", err)
 	}
@@ -31,7 +31,7 @@ func TestFilesWithPDF(t *testing.T) {
 	// fmt.Printf("%+v", rmf)
 
 	expected := RMFileInfo{
-		RelPDFPath:   "../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf",
+		RelPDFPath:   "../testfiles/xochitl/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf",
 		Identifier:   "cc8313bb-5fab-4ab5-af39-46e6d4160df3",
 		Version:      17,
 		VisibleName:  "tpl",
@@ -41,13 +41,13 @@ func TestFilesWithPDF(t *testing.T) {
 			{
 				PageNo:     0,
 				Identifier: "da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224-metadata",
-				RelRMPath:  "../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3/da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224.rm",
+				RelRMPath:  "../testfiles/xochitl/cc8313bb-5fab-4ab5-af39-46e6d4160df3/da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224.rm",
 				LayerNames: []string{"Layer 1", "Layer 2 is empty"},
 			},
 			{
 				PageNo:     1,
 				Identifier: "7794dbce-2506-4fb0-99fd-9ec031426d57-metadata",
-				RelRMPath:  "../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3/7794dbce-2506-4fb0-99fd-9ec031426d57.rm",
+				RelRMPath:  "../testfiles/xochitl/cc8313bb-5fab-4ab5-af39-46e6d4160df3/7794dbce-2506-4fb0-99fd-9ec031426d57.rm",
 				LayerNames: []string{"Layer 1", "Layer 2"},
 			},
 		},
@@ -87,7 +87,7 @@ func TestFilesWithPDF(t *testing.T) {
 func TestFilesWithoutPDF(t *testing.T) {
 
 	template := "../templates/A4.pdf"
-	rmf, err := RMFiler("../testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7", template)
+	rmf, err := RMFiler("../testfiles/xochitl/d34df12d-e72b-4939-a791-5b34b3a810e7", template)
 	if err != nil {
 		t.Errorf("Could not open file %v", err)
 	}
@@ -105,7 +105,7 @@ func TestFilesWithoutPDF(t *testing.T) {
 			{
 				PageNo:     0,
 				Identifier: "2c277cdb-79a5-4f69-b583-4901d944e77e-metadata",
-				RelRMPath:  "../testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7/2c277cdb-79a5-4f69-b583-4901d944e77e.rm",
+				RelRMPath:  "../testfiles/xochitl/d34df12d-e72b-4939-a791-5b34b3a810e7/2c277cdb-79a5-4f69-b583-4901d944e77e.rm",
 				LayerNames: []string{"Layer 1"},
 			},
 		},

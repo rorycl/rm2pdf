@@ -18,7 +18,7 @@ func Last(i []Segment) Segment {
 
 func TestRMParse(t *testing.T) {
 
-	filer, err := os.Open("../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3/da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224.rm")
+	filer, err := os.Open("../testfiles/xochitl/cc8313bb-5fab-4ab5-af39-46e6d4160df3/da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224.rm")
 	if err != nil {
 		t.Errorf("Could not open file %v", err)
 	}
@@ -125,7 +125,7 @@ func TestRMParse(t *testing.T) {
 // rmparse can now deal with corrupt files
 func TestRMParseCorrupt(t *testing.T) {
 
-	filer, err := os.Open("../testfiles/7cbc50c9-8d68-48cf-8f77-e70f2e87b732.rm")
+	filer, err := os.Open("../testfiles/xochitl/7cbc50c9-8d68-48cf-8f77-e70f2e87b732.rm")
 	if err != nil {
 		t.Errorf("Could not open corrupt rm file %v", err)
 	}
@@ -147,7 +147,7 @@ func TestRMParseCorrupt(t *testing.T) {
 
 func TestRMParseEmptyLayers(t *testing.T) {
 
-	filer, err := os.Open("../testfiles/54abf601-2e54-44d3-85d6-17c8c1472ef0.rm")
+	filer, err := os.Open("../testfiles/xochitl/54abf601-2e54-44d3-85d6-17c8c1472ef0.rm")
 	if err != nil {
 		t.Errorf("Could not open corrupt rm file %v", err)
 	}
