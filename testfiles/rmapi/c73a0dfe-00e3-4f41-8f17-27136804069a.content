@@ -1,0 +1,58 @@
+{
+    "coverPageNumber": -1,
+    "documentMetadata": {
+    },
+    "dummyDocument": false,
+    "extraMetadata": {
+        "LastBrushColor": "",
+        "LastBrushThicknessScale": "",
+        "LastColor": "",
+        "LastEraseSectionColor": "Black",
+        "LastEraseSectionSize": "2",
+        "LastEraserThicknessScale": "",
+        "LastEraserTool": "EraseSection",
+        "LastFinelinerv2Color": "Black",
+        "LastFinelinerv2Size": "2",
+        "LastPen": "Finelinerv2",
+        "LastPenColor": "",
+        "LastPenThicknessScale": "",
+        "LastPencil": "",
+        "LastPencilColor": "",
+        "LastPencilThicknessScale": "",
+        "LastTool": "Finelinerv2",
+        "ThicknessScale": ""
+    },
+    "fileType": "pdf",
+    "fontName": "",
+    "formatVersion": 1,
+    "lastOpenedPage": 0,
+    "lineHeight": -1,
+    "margins": 180,
+    "orientation": "portrait",
+    "originalPageCount": 3,
+    "pageCount": 3,
+    "pages": [
+        "3bdde0fa-01b4-4b36-8cbd-c82f0da4b61e",
+        "d43ec7ce-0385-45cd-b507-9c56c5c36552",
+        "a0fd00be-23da-481f-8f65-7203ccceb124"
+    ],
+    "redirectionPageMap": [
+        0,
+        1,
+        2
+    ],
+    "sizeInBytes": "83717",
+    "textAlignment": "justify",
+    "textScale": 1,
+    "transform": {
+        "m11": 1,
+        "m12": 0,
+        "m13": 0,
+        "m21": 0,
+        "m22": 1,
+        "m23": 0,
+        "m31": 0,
+        "m32": 0,
+        "m33": 1
+    }
+}
