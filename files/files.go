@@ -157,31 +157,30 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 		return rm, fmt.Errorf("PDF file %s not found", rm.RelPDFPath)
 	}
 
-	if err := checkFileExists(fmetadata); err != nil {
-		return rm, fmt.Errorf("PDF metadata file %s not found", fmetadata)
+	// metadata only exists on xochitl files
+	if err := checkFileExists(fmetadata); err == nil {
+
+		body, err := ioutil.ReadFile(fmetadata)
+		if err != nil {
+			return rm, err
+		}
+		var p pdfMetadata
+		err = json.Unmarshal(body, &p)
+		if err != nil {
+			return rm, err
+		}
+
+		rm.Version = p.Version
+		rm.VisibleName = p.VisibleName
+		rm.LastModified = time.Time(p.LastModified)
 	}
 
 	if err := checkFileExists(fcontent); err != nil {
 		return rm, fmt.Errorf("PDF content file %s not found", fcontent)
 	}
 
-	// read metadata
-	body, err := ioutil.ReadFile(fmetadata)
-	if err != nil {
-		return rm, err
-	}
-	var p pdfMetadata
-	err = json.Unmarshal(body, &p)
-	if err != nil {
-		return rm, err
-	}
-
-	rm.Version = p.Version
-	rm.VisibleName = p.VisibleName
-	rm.LastModified = time.Time(p.LastModified)
-
 	// read content
-	body, err = ioutil.ReadFile(fcontent)
+	body, err := ioutil.ReadFile(fcontent)
 	if err != nil {
 		return rm, err
 	}
@@ -197,6 +196,10 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	// itself
 	for i, rmj := range c.Pages {
 
+		if err := checkFileExists(filepath.Join(fbase, rmj+"-metadata.json")); err != nil {
+			// swap explicit page uuid for rmapi index-based system
+			rmj = strconv.Itoa(i)
+		}
 		rmJSONPath := filepath.Join(fbase, rmj+"-metadata.json")
 		rmPath := filepath.Join(fbase, rmj+".rm")
 		rmid := strings.Replace(filepath.Base(rmJSONPath), filepath.Ext(rmJSONPath), "", 1)
