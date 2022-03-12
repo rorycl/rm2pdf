@@ -1,6 +1,13 @@
 testfiles.README
 
-The files in this directory are from the xochitl directory on a
+The testfiles are in two directories:
+
+xochitl: using the on-device directory format
+rmapi:   using the rmapi/api directory format
+
+XOCHITL FORMAT
+
+The files in the xochitl directory are from the xochitl directory on a
 reMarkable tablet. The cc8313bb-5fab-4ab5-af39-46e6d4160df3 files (or
 "rm bundle") are associated with a single two page PDF file,
 cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf. The PDF has the following
@@ -81,3 +88,4 @@ d34df12d-e72b-4939-a791-5b34b3a810e7, which is a one-page .rm notebook.
 	│   └── 2c277cdb-79a5-4f69-b583-4901d944e77e.jpg
 	└── reMarkable_output.pdf
 
+RMAPI FORMAT
