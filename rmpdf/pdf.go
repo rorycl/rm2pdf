@@ -25,16 +25,18 @@ import (
 const PDF_WIDTH_IN_MM = 222.6264
 const PDF_HEIGHT_IN_MM = 297.0000
 
-// Conversion between millimeters and standard postscript points
+// MM_TO_RMPOINTS is the conversion between millimeters and standard
+// postscript points
 const MM_TO_RMPOINTS = 2.83465
 
-// Conversion from rm pixels to points, theoretically 2.2253
+// PTS_2_RMPTS is the conversion from rm pixels to points, theoretically
+// 2.2253
 const PTS_2_RMPTS = 2.222 // eyeballed conversion
 
-// Layer names
+// LayerRegister is a Layer names
 var LayerRegister = map[string]int{}
 
-// Unknown pen register
+// UnknownPens is an unknown pen register
 var UnknownPens = make(map[int]int)
 
 // List of colours to use, by layer, for pens with ColourOverride ==
@@ -56,7 +58,7 @@ func layerIDFromRegister(name string, pdf *gofpdf.Fpdf) int {
 // file layers are put into subsequent layers with a default PDF
 // visibility of "true".
 // Note that eraser types are presently skipped.
-func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf) {
+func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf) error {
 
 	// add a new page
 	pdf.AddPage()
@@ -86,14 +88,14 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf)
 	rmPage := rmf.Pages[pageno]
 	if !rmPage.Exists {
 		rmf.Debug(fmt.Sprintf("no rm file for page %d ...skipping", pageno+1))
-		return
+		return nil
 	}
 
 	rmf.Debug(fmt.Sprintf("rmfile %s", rmPage.RelRMPath))
 
 	rmF, err := os.Open(rmPage.RelRMPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer rmF.Close()
 
@@ -181,9 +183,11 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf)
 	pdf.EndLayer()
 
 	rmf.Debug(fmt.Sprintf("Maximum coordinates : %+v\n", rm.MaxCoordinates))
+
+	return nil
 }
 
-// rm2pdf is the main entry point for the programme. It takes a single
+// RM2PDF is the main entry point for the programme. It takes a single
 // string pointing to a valid PDF file (or the replacement A4 template)
 // with an associated set of reMarkable metadata and .rm files. It then
 // makes a PDF page for each page in the original PDF (although the
@@ -196,7 +200,7 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 	// initialise struct containing information about the files
 	rmfile, err := files.RMFiler(inputpath, template)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if verbose {
@@ -230,7 +234,7 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 
 	err = pdf.OutputFileAndClose(outfile)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if len(UnknownPens) > 0 {
