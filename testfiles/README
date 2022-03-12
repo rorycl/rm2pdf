@@ -5,6 +5,12 @@ The testfiles are in two directories:
 xochitl: using the on-device directory format
 rmapi:   using the rmapi/api directory format
 
+The main differences between the two formats is the way "pages" are
+referenced. In xochitl format these are explicitly uuid-based, as noted
+in the .content "pages" attribute. In rmapi/api format, the rm page
+files are named after the 0 index-based page number of the associated
+PDF.
+
 XOCHITL FORMAT
 
 The files in the xochitl directory are from the xochitl directory on a
@@ -88,4 +94,29 @@ d34df12d-e72b-4939-a791-5b34b3a810e7, which is a one-page .rm notebook.
 	│   └── 2c277cdb-79a5-4f69-b583-4901d944e77e.jpg
 	└── reMarkable_output.pdf
 
+
 RMAPI FORMAT
+
+Files using the `rmapi get` command are saved in zip file format. The
+zip file test.zip in the rmapi directory is an example of a 3 page PDF
+file saved using this methiod (using rmapi 0.0.15).
+
+	Archive:  rmparse/test.zip
+	  Length      Date    Time    Name
+	---------  ---------- -----   ----
+		 1425  2022-03-12 20:53   c73a0dfe-00e3-4f41-8f17-27136804069a.content
+			3  2022-03-12 20:53   c73a0dfe-00e3-4f41-8f17-27136804069a.pagedata
+		36627  2022-03-12 20:52   c73a0dfe-00e3-4f41-8f17-27136804069a/0.rm
+		   76  2022-03-12 20:52   c73a0dfe-00e3-4f41-8f17-27136804069a/0-metadata.json
+		18723  2022-03-12 20:51   c73a0dfe-00e3-4f41-8f17-27136804069a/2.rm
+		   76  2022-03-12 20:51   c73a0dfe-00e3-4f41-8f17-27136804069a/2-metadata.json
+		10258  2022-03-12 20:49   c73a0dfe-00e3-4f41-8f17-27136804069a.pdf
+	---------                     -------
+		67188                     7 files
+
+The .content file is similarly structured to that for an xochitl file.
+The main difference is that the .rm files and associated .json metadata
+files are not named as set out in the .content file "pages" metadata
+attribute. Rather then refer to a 0 index-based page number. In the
+example above annotations have only been made on the first and third
+pages of a three page PDF.
