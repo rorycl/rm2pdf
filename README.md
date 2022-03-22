@@ -24,6 +24,22 @@ rm2pdf -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/o
 rm2pdf -c blue -c red -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/output4.pdf
 ```
 
+# March 2022 update
+
+On the experimental `rmapi-support1 branch I'm working on:
+
+* supporting converting rmapi download zip files to pdfs
+
+Possibly also:
+
+* choosing which layers to convert (eg removing the background pdf)
+* seeing if PDF conversion errors with the `phpdave11/gofpdi` module can
+  be sidestepped by first splitting the origin pdf (perhaps) using the
+  `pdfcpu` library.
+
+It would also be nice to support using a settings file for specifying
+brush thicknesses, colours and opacities. We'll see. 
+
 # Details
 
 rm2pdf requires "bundles" of files created on the reMarkable tablet, including
