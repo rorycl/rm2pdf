@@ -55,3 +55,11 @@ func fw(fst fs.FS) {
 
 	fs.WalkDir(fst, ".", printer)
 }
+
+// Check if a file exists
+func checkFileExists(f string) bool {
+	if _, err := os.Stat(f); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
