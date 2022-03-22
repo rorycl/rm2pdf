@@ -101,7 +101,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf)
 
 	rm, err := rmparse.RMParse(rmF)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// set custom colours for layers, if provided, and make sure the
