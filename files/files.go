@@ -35,6 +35,10 @@ type RMFileInfo struct {
 	Pages              []RMPage
 	RedirectionPageMap []int // page insertion info
 	Debugging          bool
+	// show inserted pages
+	insertedPages
+	// page number used for processing
+	thisPageNo int
 }
 
 // Debug prints a message if the debugging switch is on
@@ -42,6 +46,91 @@ func (r *RMFileInfo) Debug(d string) {
 	if r.Debugging {
 		fmt.Println(d)
 	}
+}
+
+// deal with inserted pages
+type insertedPages []int
+
+// pageNos shows human-readable inserted page numbers
+func (ip insertedPages) insertedPageNos() []int {
+	var o []int
+	for _, v := range ip {
+		o = append(o, v+1)
+	}
+	return o
+}
+
+// format which human readable pages are inserted
+func (ip insertedPages) insertedPageNumbers() string {
+	var s []string
+	for _, n := range ip.insertedPageNos() {
+		s = append(s, strconv.Itoa(n))
+	}
+	o := strings.Join(s, " and ")
+	n := strings.Count(o, " and ")
+	if n > 1 {
+		o = strings.Replace(o, " and ", ", ", n-1)
+	}
+	return o
+}
+
+// register inserted pages
+func (r *RMFileInfo) registerInsertedPages() {
+	for i, v := range r.RedirectionPageMap {
+		if v == -1 {
+			r.insertedPages = append(r.insertedPages, i)
+		}
+	}
+	return
+}
+
+// PageIterate iterates over pages using the rmfile iterator which
+// provides a page number and the pdf to use (either the annotated
+// pdf or the template). For annotated pdfs with inserted pages one
+// might receive the following output from the iterator:
+//
+// pageno | pdfPage | inserted | template      |
+// -------+---------+----------+---------------+
+// 0      | 0       | no       | annotated.pdf |
+// 1      | 0       | yes      | template.pdf  |
+// 2      | 1       | no       | annotated.pdf |
+//
+// This function returns 0-indexed pdf pages
+func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate bool) {
+	pageNo = r.thisPageNo
+	r.thisPageNo++
+
+	// if there is only a template, always return the first page
+	if r.RelPDFPath == "" {
+		pdfPageNo = 0
+		isTemplate = true
+		return
+	}
+
+	// return the template if this is an inserted page
+	if r.RedirectionPageMap[pageNo] == -1 {
+		pdfPageNo = 0
+		inserted = true
+		isTemplate = true
+		return
+	}
+
+	// if the annotated pdf has inserted pages, calculate the offset of
+	// the original pdf to use
+	if r.PageCount != r.OriginalPageCount {
+		pdfPageNo = pageNo
+		for i := 0; i <= pageNo; i++ {
+			if r.RedirectionPageMap[i] == -1 {
+				pdfPageNo--
+			}
+		}
+		return
+	}
+
+	// fall through: the annotated pdf has no inserted pages
+	pdfPageNo = pageNo
+	return
+
 }
 
 // RMPage is a struct defining metadata about each .rm file associated
@@ -180,9 +269,11 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 		return rm, err
 	}
 
+	// load content into rm struct and calculate the inserted pages
 	rm.PageCount = c.PageCount
 	rm.OriginalPageCount = c.OriginalPageCount
 	rm.RedirectionPageMap = c.RedirectionPageMap
+	rm.registerInsertedPages()
 
 	if len(c.Pages) != rm.PageCount {
 		return rm, fmt.Errorf(

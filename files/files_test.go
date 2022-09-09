@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	// "fmt"
 )
 
@@ -193,7 +194,50 @@ func TestInsertedPage(t *testing.T) {
 		Debugging:          false,
 	}
 
-	if !cmp.Equal(rmf, expected) {
+	if !cmp.Equal(rmf, expected, cmpopts.IgnoreUnexported(rmf)) {
 		t.Errorf("rmf != expected for insert page test")
+	}
+
+	if len(rmf.insertedPages) != 1 || rmf.insertedPages[0] != 1 {
+		t.Errorf(
+			"inserted pages %v should equal [1]",
+			rmf.insertedPages,
+		)
+	}
+	if !cmp.Equal(rmf.insertedPages.insertedPageNos(), []int{2}) {
+		t.Errorf(
+			"human inserted pages %v should equal {2}",
+			rmf.insertedPages.insertedPageNos(),
+		)
+	}
+	if rmf.insertedPages.insertedPageNumbers() != "2" {
+		t.Errorf(
+			"human inserted pages as string %v should equal '2'",
+			rmf.insertedPages.insertedPageNumbers(),
+		)
+	}
+
+	type iterExpected struct {
+		pageNo     int
+		pdfPageNo  int
+		inserted   bool
+		isTemplate bool
+	}
+	iExpectArray := []iterExpected{
+		{0, 0, false, false},
+		{1, 0, true, true},
+		{2, 1, false, false},
+	}
+
+	for i := 0; i < rmf.PageCount; i++ {
+		pageNo, pdfPageNo, inserted, isTemplate := rmf.PageIterate()
+		j := iterExpected{pageNo, pdfPageNo, inserted, isTemplate}
+		e := iExpectArray[i]
+		if j.pageNo != e.pageNo ||
+			j.pdfPageNo != e.pdfPageNo ||
+			j.inserted != e.inserted ||
+			j.isTemplate != e.isTemplate {
+			t.Errorf("iter i %d expected %+v got %+v", i, e, j)
+		}
 	}
 }
