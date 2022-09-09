@@ -9,6 +9,7 @@ package files
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -24,6 +25,7 @@ import (
 // from the reMarkable file collection
 type RMFileInfo struct {
 	RelPDFPath         string // full relative path to PDF
+	RelPDFTemplatePath string // full relative path to PDF template
 	Identifier         string // the uuid used to identify the PDF file
 	Version            int    // version from metadata
 	VisibleName        string // visibleName from metadata (used in reMarkable interface)
@@ -32,7 +34,6 @@ type RMFileInfo struct {
 	PageCount          int
 	Pages              []RMPage
 	RedirectionPageMap []int // page insertion info
-	UseTemplate        bool  // a template pdf is in use
 	Debugging          bool
 }
 
@@ -146,22 +147,6 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	fmetadata := fbase + ".metadata"
 	fcontent := fbase + ".content"
 
-	// determine if template is in use
-	if template != "" {
-		err := checkFileExists(template)
-		if err != nil {
-			return rm, fmt.Errorf("template %s not found", template)
-		}
-		rm.RelPDFPath = template
-		rm.UseTemplate = true
-	} else {
-		rm.RelPDFPath = fbase + ".pdf"
-	}
-
-	if err := checkFileExists(rm.RelPDFPath); err != nil {
-		return rm, fmt.Errorf("PDF file %s not found", rm.RelPDFPath)
-	}
-
 	// metadata only exists on xochitl files
 	if err := checkFileExists(fmetadata); err == nil {
 
@@ -202,6 +187,25 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	if len(c.Pages) != rm.PageCount {
 		return rm, fmt.Errorf(
 			"number of rm pages %d != json pageCount %d", len(c.Pages), rm.PageCount)
+	}
+
+	// check base pdf exists and/or template pdf file
+	if c.FileType == "pdf" {
+		rm.RelPDFPath = fbase + ".pdf"
+		if err := checkFileExists(rm.RelPDFPath); err != nil {
+			return rm, fmt.Errorf("PDF file %s not found", rm.RelPDFPath)
+		}
+	}
+	if template != "" {
+		err := checkFileExists(template)
+		if err != nil {
+			return rm, fmt.Errorf("template %s not found", template)
+		}
+		rm.RelPDFTemplatePath = template
+	}
+
+	if rm.RelPDFPath == "" && rm.RelPDFTemplatePath == "" {
+		return rm, errors.New("neither a base pdf or template pdf were found")
 	}
 
 	// extract each rm json page and construct the path to the .rm file

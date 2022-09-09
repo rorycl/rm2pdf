@@ -100,12 +100,12 @@ func TestFilesXochitlWithoutPDF(t *testing.T) {
 	// fmt.Printf("%+v", rmf)
 
 	expected := RMFileInfo{
-		RelPDFPath:   "../templates/A4.pdf",
-		Identifier:   "d34df12d-e72b-4939-a791-5b34b3a810e7",
-		Version:      0,
-		VisibleName:  "toolbox",
-		LastModified: ptime("2020-01-05 13:03:52 +0000 GMT"),
-		PageCount:    1,
+		RelPDFTemplatePath: "../templates/A4.pdf",
+		Identifier:         "d34df12d-e72b-4939-a791-5b34b3a810e7",
+		Version:            0,
+		VisibleName:        "toolbox",
+		LastModified:       ptime("2020-01-05 13:03:52 +0000 GMT"),
+		PageCount:          1,
 		Pages: []RMPage{
 			{
 				PageNo:     0,
@@ -150,7 +150,7 @@ func TestFilesXochitlWithoutPDF(t *testing.T) {
 func TestInsertedPage(t *testing.T) {
 
 	testUUID := "fbe9f971-03ba-4c21-a0e8-78dd921f9c4c"
-	template := ""
+	template := "../templates/A4.pdf"
 
 	rmf, err := RMFiler("../testfiles/"+testUUID, template)
 	if err != nil {
@@ -158,13 +158,14 @@ func TestInsertedPage(t *testing.T) {
 	}
 
 	expected := RMFileInfo{
-		RelPDFPath:        "../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c.pdf",
-		Identifier:        "fbe9f971-03ba-4c21-a0e8-78dd921f9c4c",
-		Version:           0,
-		VisibleName:       "insert-pages",
-		LastModified:      ptime("2022-09-09 14:13:39 +0100 BST"),
-		OriginalPageCount: 2,
-		PageCount:         3,
+		RelPDFPath:         "../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c.pdf",
+		RelPDFTemplatePath: "../templates/A4.pdf",
+		Identifier:         "fbe9f971-03ba-4c21-a0e8-78dd921f9c4c",
+		Version:            0,
+		VisibleName:        "insert-pages",
+		LastModified:       ptime("2022-09-09 14:13:39 +0100 BST"),
+		OriginalPageCount:  2,
+		PageCount:          3,
 		Pages: []RMPage{
 			{
 				PageNo:     0,
@@ -189,7 +190,6 @@ func TestInsertedPage(t *testing.T) {
 			},
 		},
 		RedirectionPageMap: []int{0, -1, 1},
-		UseTemplate:        false,
 		Debugging:          false,
 	}
 
