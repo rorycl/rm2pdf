@@ -20,7 +20,9 @@ func ptime(ti string) time.Time {
 	return tp
 }
 
-func TestFilesWithPDF(t *testing.T) {
+// TestFilesXochitlWithPDF tests the xochitl file format for a test with
+// a backing pdf
+func TestFilesXochitlWithPDF(t *testing.T) {
 
 	template := ""
 	rmf, err := RMFiler("../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf", template)
@@ -84,7 +86,8 @@ func TestFilesWithPDF(t *testing.T) {
 
 }
 
-func TestFilesWithoutPDF(t *testing.T) {
+// TestFilesXochitlWithoutPDF tests xochitl format files without a pdf
+func TestFilesXochitlWithoutPDF(t *testing.T) {
 
 	template := "../templates/A4.pdf"
 	rmf, err := RMFiler("../testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7", template)
