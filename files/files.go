@@ -48,6 +48,12 @@ func (r *RMFileInfo) Debug(d string) {
 	}
 }
 
+// InsertedPages is a public export of the embedded insertedPages human
+// readable page numbers func
+func (r *RMFileInfo) InsertedPages() string {
+	return r.insertedPages.insertedPageNumbers()
+}
+
 // deal with inserted pages
 type insertedPages []int
 
@@ -107,8 +113,11 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 		return
 	}
 
+	// older remarkable bundles don't report inserted pages; ignore
+	hasRedir := func() bool { return len(r.RedirectionPageMap) > 0 }()
+
 	// return the template if this is an inserted page
-	if r.RedirectionPageMap[pageNo] == -1 {
+	if hasRedir && r.RedirectionPageMap[pageNo] == -1 {
 		pdfPageNo = 0
 		inserted = true
 		isTemplate = true
@@ -117,7 +126,7 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 
 	// if the annotated pdf has inserted pages, calculate the offset of
 	// the original pdf to use
-	if r.PageCount != r.OriginalPageCount {
+	if hasRedir && r.PageCount != r.OriginalPageCount {
 		pdfPageNo = pageNo
 		for i := 0; i <= pageNo; i++ {
 			if r.RedirectionPageMap[i] == -1 {
