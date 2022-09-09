@@ -7,8 +7,10 @@ RCL January 2020
 package rmpdf
 
 import (
-	colornames "golang.org/x/image/colornames"
 	"os"
+
+	colornames "golang.org/x/image/colornames"
+
 	// "fmt"
 	"io/ioutil"
 	"testing"
@@ -53,6 +55,30 @@ func TestConvertWithoutPDF(t *testing.T) {
 	}
 
 	RM2PDF("../testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7", tname, "../templates/A4.pdf", false, colours)
+	if err != nil {
+		t.Errorf("An rm2pdf error occurred: %v", err)
+	}
+}
+
+// Test converting an rm file bundle with an inserted page
+func TestConvertWithInsertedPage(t *testing.T) {
+
+	// make temporary file
+	tmpfile, err := ioutil.TempFile("", "example")
+	if err != nil {
+		t.Error(err)
+	}
+	tname := tmpfile.Name()
+	defer os.Remove(tname)
+
+	colours := []LocalColour{
+		LocalColour{
+			Name:   "darkseagreen",
+			Colour: colornames.Darkseagreen,
+		},
+	}
+
+	RM2PDF("../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c", tname, "../templates/A4.pdf", false, colours)
 	if err != nil {
 		t.Errorf("An rm2pdf error occurred: %v", err)
 	}

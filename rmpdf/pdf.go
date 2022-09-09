@@ -62,7 +62,7 @@ func layerIDFromRegister(name string, pdf *gofpdf.Fpdf) int {
 // file layers are put into subsequent layers with a default PDF
 // visibility of "true".
 // Note that eraser types are presently skipped.
-func constructPageWithLayers(rmf files.RMFileInfo, pageno int, useTemplate bool, pdf *gofpdf.Fpdf) error {
+func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useTemplate bool, pdf *gofpdf.Fpdf) error {
 
 	// add a new page
 	pdf.AddPage()
@@ -74,12 +74,12 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, useTemplate bool,
 	layerID := layerIDFromRegister("Background", pdf)
 	pdf.BeginLayer(layerID)
 
-	rmf.Debug(fmt.Sprintf("%s page %d", rmf.RelPDFPath, pageno+1))
+	rmf.Debug(fmt.Sprintf("%s rm page %d pdf page %d", rmf.RelPDFPath, rmPageNo+1, pdfPageNo+1))
 
 	// if an annotated pdf is provided, use the next page from that
 	// if using the A4 template, recycle page use, based on output from
 	// rmf.PageIterate from caller, whose pagenumbers are 0-indexed
-	importPage := pageno + 1
+	pdfImportPage := pdfPageNo + 1
 
 	// switch between annotated and template file
 	pdfFile := rmf.RelPDFPath
@@ -87,14 +87,14 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, useTemplate bool,
 		pdfFile = rmf.RelPDFTemplatePath
 	}
 
-	bgpdf := gofpdi.ImportPage(pdf, pdfFile, importPage, "/MediaBox")
+	bgpdf := gofpdi.ImportPage(pdf, pdfFile, pdfImportPage, "/MediaBox")
 	gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 210*MMtoRMPoints, 297*MMtoRMPoints)
 	pdf.EndLayer()
 
 	// Initialise the .rm file parser if the .rm file exists, else return
-	rmPage := rmf.Pages[pageno]
+	rmPage := rmf.Pages[rmPageNo]
 	if !rmPage.Exists {
-		rmf.Debug(fmt.Sprintf("no rm file for page %d ...skipping", pageno+1))
+		rmf.Debug(fmt.Sprintf("no rm file for page %d ...skipping", rmPageNo+1))
 		return nil
 	}
 
@@ -258,7 +258,7 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 			"processing page %d %d inserted %t template %t\n",
 			pageNo, pdfPageNo, inserted, isTemplate,
 		))
-		constructPageWithLayers(rmfile, pdfPageNo, isTemplate, pdf)
+		constructPageWithLayers(rmfile, pageNo, pdfPageNo, isTemplate, pdf)
 	}
 
 	err = pdf.OutputFileAndClose(outfile)
