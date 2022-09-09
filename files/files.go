@@ -279,8 +279,14 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	}
 
 	// load content into rm struct and calculate the inserted pages
+	// assume that if OriginalPageCount is 0 this is from an historic
+	// .rm file (which did not have this field) and set it to be the
+	// same as PageCount
 	rm.PageCount = c.PageCount
 	rm.OriginalPageCount = c.OriginalPageCount
+	if rm.OriginalPageCount == 0 {
+		rm.OriginalPageCount = rm.PageCount
+	}
 	rm.RedirectionPageMap = c.RedirectionPageMap
 	rm.registerInsertedPages()
 

@@ -32,7 +32,7 @@ type StrokeSetting struct {
 	ColourOverride bool
 }
 
-// Map of pen numbers in a reMarkable binary .rm file
+// StrokeMap is a Map of pen numbers in a reMarkable binary .rm file
 var StrokeMap = map[int]string{
 	2: "pen",
 	4: "fineliner",
@@ -51,7 +51,7 @@ var StrokeMap = map[int]string{
 	18: "highlighter",
 }
 
-// Set of pen default settings
+// StrokeSettings sets the pen default settings
 var StrokeSettings = map[string]StrokeSetting{
 	"pen": {
 		Colour:         colornames.Black,
@@ -110,10 +110,10 @@ var StrokeSettings = map[string]StrokeSetting{
 	},
 }
 
-// Each rm pen comes in three widths, 1.875, 2.000, 2.125,
-// so provide a fractional width calculation done by eyeballing what
-// seems about right. It probably makes sense to move the widths
-// to the map of pens in future.
+// Width sets pen widths. Each rm pen comes in three widths, 1.875,
+// 2.000, 2.125, so provide a fractional width calculation done by
+// eyeballing what seems about right. It probably makes sense to move
+// the widths to the map of pens in future.
 func (s *StrokeSetting) Width(penwidth float32) float64 {
 	r := 0.0
 	t := float64(s.StdWidth)

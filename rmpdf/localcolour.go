@@ -9,19 +9,18 @@ package rmpdf
 
 import (
 	"image/color"
-	colornames "golang.org/x/image/colornames"
 	"strings"
+
+	colornames "golang.org/x/image/colornames"
 )
 
+// LocalColour describes a color by name and RGBA value
 type LocalColour struct {
 	Name   string
 	Colour color.RGBA
 }
 
-func (c *LocalColour) Usage() string {
-	return "some help here"
-}
-
+// UnmarshalFlag generates the colour value for a colour string
 func (l *LocalColour) UnmarshalFlag(value string) error {
 	// empty or mismatched values are defaulted to an empty color.RGBA
 	// instance

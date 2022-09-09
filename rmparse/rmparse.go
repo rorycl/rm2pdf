@@ -26,9 +26,10 @@ import (
 	"os"
 )
 
-var HEADER = "reMarkable .lines file, version=5         "
+// Header is an rm file header
+var Header = "reMarkable .lines file, version=5         "
 
-// reMarkable .rm file File parser metadata: base structure
+// RMFile is the reMarkable .rm file File parser metadata base structure
 type RMFile struct {
 	File           *os.File
 	Header         [43]byte
@@ -41,27 +42,27 @@ type RMFile struct {
 	Verbose        bool
 }
 
-// reMarkable parsed data structure, returned by Parse()
+// RMPath is the reMarkable parsed data structure, returned by Parse()
 type RMPath struct {
 	Layer    uint32
 	Path     Path
 	Segments []Segment
 }
 
-// header and number of layers
+// HeaderLayers is the header and number of layers
 // format <{}sI
 type HeaderLayers struct {
 	Header [43]byte
 	Layers uint32
 }
 
-// number of paths in this layer
+// Paths is the number of paths in this layer
 // format <I
 type Paths struct {
 	Number uint32
 }
 
-// a path
+// Path describes a path
 // format <IIIfII
 type Path struct {
 	Pen         uint32
@@ -72,7 +73,7 @@ type Path struct {
 	NumSegments uint32
 }
 
-// path segments
+// Segment describes a path segment
 // format <ffffff
 type Segment struct {
 	X        float32
@@ -83,7 +84,7 @@ type Segment struct {
 	_        float32 // unknown
 }
 
-// store the maximum and minimum path segments
+// MaxCoordinates stores the maximum and minimum path segments
 type MaxCoordinates struct {
 	X float32
 	Y float32
@@ -91,9 +92,9 @@ type MaxCoordinates struct {
 
 var ms = MaxCoordinates{}
 
-// Instantiate parser by registering a file to parse and initialising
-// the header, layer count and related counters. Continue parsing using
-// the "Parse()" iterator-type function.
+// RMParse instantiates a parser by registering a file to parse and
+// initialising the header, layer count and related counters. Continue
+// parsing using the "Parse()" iterator-type function.
 func RMParse(f *os.File) (*RMFile, error) {
 
 	rm := &RMFile{}
@@ -108,8 +109,8 @@ func RMParse(f *os.File) (*RMFile, error) {
 	rm.LayerNo = headerLayers.Layers
 
 	// last byte is 0-terminated, chop it off
-	if string(rm.Header[:len(rm.Header)-1]) != HEADER {
-		return nil, errors.New(fmt.Sprintf("Header does not match %s", HEADER))
+	if string(rm.Header[:len(rm.Header)-1]) != Header {
+		return nil, fmt.Errorf("Header does not match %s", Header)
 	}
 
 	if rm.LayerNo < 1 {
@@ -194,7 +195,7 @@ func (rm *RMFile) Parse() bool {
 	return true
 }
 
-// start parsing the .rm file, returning the header and number of layers
+// HeaderParse starts parsing an .rm file, returning the header and number of layers
 func HeaderParse(f *os.File) (HeaderLayers, error) {
 
 	hl := HeaderLayers{}
@@ -209,7 +210,8 @@ func HeaderParse(f *os.File) (HeaderLayers, error) {
 	return hl, nil
 }
 
-// for each layer in the .rm file, return the number of paths
+// ParseLayers returns the number of paths for each layer in the .rm
+// file
 func ParseLayers(f *os.File) (Paths, error) {
 
 	pths := Paths{}
@@ -224,7 +226,7 @@ func ParseLayers(f *os.File) (Paths, error) {
 	return pths, nil
 }
 
-// for each path in the layer.paths, return the path
+// ParsePath returns the path for each path in the layer.paths
 func ParsePath(f *os.File) (Path, error) {
 
 	path := Path{}
@@ -240,7 +242,7 @@ func ParsePath(f *os.File) (Path, error) {
 	return path, nil
 }
 
-// for each segment in path, return the segment
+// ParseSegment returns the segment for each segment in a path
 func ParseSegment(f *os.File) (Segment, error) {
 
 	sg := Segment{}
