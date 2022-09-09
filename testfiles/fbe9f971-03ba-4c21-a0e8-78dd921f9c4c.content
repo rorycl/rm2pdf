@@ -1,0 +1,61 @@
+{
+    "coverPageNumber": -1,
+    "documentMetadata": {
+    },
+    "dummyDocument": false,
+    "extraMetadata": {
+        "LastBrushColor": "",
+        "LastBrushThicknessScale": "",
+        "LastColor": "",
+        "LastEraseSectionColor": "Black",
+        "LastEraseSectionSize": "2",
+        "LastEraserThicknessScale": "",
+        "LastEraserTool": "EraseSection",
+        "LastFinelinerv2Color": "Black",
+        "LastFinelinerv2Size": "2",
+        "LastHighlighterv2Color": "Black",
+        "LastHighlighterv2Size": "2",
+        "LastMarkerv2Color": "Black",
+        "LastMarkerv2Size": "2",
+        "LastPaintbrushv2Color": "Black",
+        "LastPaintbrushv2Size": "3",
+        "LastPen": "Finelinerv2",
+        "LastPenColor": "",
+        "LastPenThicknessScale": "",
+        "LastPencil": "",
+        "LastPencilColor": "",
+        "LastPencilThicknessScale": "",
+        "LastPencilv2Color": "Black",
+        "LastPencilv2Size": "2",
+        "LastSharpPencilv2Color": "Black",
+        "LastSharpPencilv2Size": "2",
+        "LastTool": "Finelinerv2",
+        "ThicknessScale": ""
+    },
+    "fileType": "pdf",
+    "fontName": "",
+    "formatVersion": 1,
+    "lastOpenedPage": 0,
+    "lineHeight": -1,
+    "margins": 180,
+    "orientation": "portrait",
+    "originalPageCount": 2,
+    "pageCount": 3,
+    "pageTags": [
+    ],
+    "pages": [
+        "fa678373-8530-465d-a988-a0b158d957e4",
+        "0b8b6e65-926c-4269-9109-36fca8718c94",
+        "e2a69ab6-5c11-42d1-8d2d-9ce6569d9fdf"
+    ],
+    "redirectionPageMap": [
+        0,
+        -1,
+        1
+    ],
+    "sizeInBytes": "86319",
+    "tags": [
+    ],
+    "textAlignment": "justify",
+    "textScale": 1
+}
