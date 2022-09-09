@@ -19,19 +19,23 @@ import (
 )
 
 // reMarkable png templates (in /usr/share/remarkable/templates) are
-// 1404x1873px or 495.4x660.9mm at 2.834x2.834 pixels/mm
-// reMarkable output PDF sizes with fixed y and variable x use
-// reMarkable png templates as a model
-const PDF_WIDTH_IN_MM = 222.6264
-const PDF_HEIGHT_IN_MM = 297.0000
+// 1404x1873px or 495.4x660.9mm at 2.834x2.834 pixels/mm reMarkable
+// output PDF sizes with fixed y and variable x use reMarkable png
+// templates as a model
 
-// MM_TO_RMPOINTS is the conversion between millimeters and standard
+// PDFWidthInMM is the width of a PDF in millimetres
+const PDFWidthInMM = 222.6264
+
+// PDFHeightInMM is the width of a PDF in millimetres
+const PDFHeightInMM = 297.0000
+
+// MMtoRMPoints is the conversion between millimeters and standard
 // postscript points
-const MM_TO_RMPOINTS = 2.83465
+const MMtoRMPoints = 2.83465
 
-// PTS_2_RMPTS is the conversion from rm pixels to points, theoretically
+// Pts2RMPoints is the conversion from rm pixels to points, theoretically
 // 2.2253
-const PTS_2_RMPTS = 2.222 // eyeballed conversion
+const Pts2RMPoints = 2.222 // eyeballed conversion
 
 // LayerRegister is a Layer names
 var LayerRegister = map[string]int{}
@@ -58,7 +62,7 @@ func layerIDFromRegister(name string, pdf *gofpdf.Fpdf) int {
 // file layers are put into subsequent layers with a default PDF
 // visibility of "true".
 // Note that eraser types are presently skipped.
-func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf) error {
+func constructPageWithLayers(rmf files.RMFileInfo, pageno int, useTemplate bool, pdf *gofpdf.Fpdf) error {
 
 	// add a new page
 	pdf.AddPage()
@@ -72,16 +76,19 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf)
 
 	rmf.Debug(fmt.Sprintf("%s page %d", rmf.RelPDFPath, pageno+1))
 
-	// if using the A4 template, recycle page use
-	var importPage int
-	if rmf.UseTemplate {
-		importPage = 1
-	} else {
-		importPage = pageno + 1
+	// if an annotated pdf is provided, use the next page from that
+	// if using the A4 template, recycle page use, based on output from
+	// rmf.PageIterate from caller, whose pagenumbers are 0-indexed
+	importPage := pageno + 1
+
+	// switch between annotated and template file
+	pdfFile := rmf.RelPDFPath
+	if useTemplate {
+		pdfFile = rmf.RelPDFTemplatePath
 	}
 
-	bgpdf := gofpdi.ImportPage(pdf, rmf.RelPDFPath, importPage, "/MediaBox")
-	gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 210*MM_TO_RMPOINTS, 297*MM_TO_RMPOINTS)
+	bgpdf := gofpdi.ImportPage(pdf, pdfFile, importPage, "/MediaBox")
+	gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 210*MMtoRMPoints, 297*MMtoRMPoints)
 	pdf.EndLayer()
 
 	// Initialise the .rm file parser if the .rm file exists, else return
@@ -165,11 +172,11 @@ func constructPageWithLayers(rmf files.RMFileInfo, pageno int, pdf *gofpdf.Fpdf)
 
 			// write rm segment to pdf path
 			if s == 1 {
-				pdf.MoveTo(float64(segment.X/PTS_2_RMPTS),
-					float64(segment.Y/PTS_2_RMPTS))
+				pdf.MoveTo(float64(segment.X/Pts2RMPoints),
+					float64(segment.Y/Pts2RMPoints))
 			} else {
-				pdf.LineTo(float64(segment.X/PTS_2_RMPTS),
-					float64(segment.Y/PTS_2_RMPTS))
+				pdf.LineTo(float64(segment.X/Pts2RMPoints),
+					float64(segment.Y/Pts2RMPoints))
 			}
 		}
 		pdf.DrawPath("D") // outlined only; use FD for filled and outlined
@@ -207,12 +214,19 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 		rmfile.Debugging = true
 	}
 
+	if (rmfile.OriginalPageCount != rmfile.OriginalPageCount) && template == "" {
+		return fmt.Errorf(
+			"bundle has inserted page/s %s and no template was provided",
+			rmfile.InsertedPages(),
+		)
+	}
+
 	// See fpdf PageSize example
 	pdf := gofpdf.NewCustom(&gofpdf.InitType{
 		UnitStr: "pt",
 		Size: gofpdf.SizeType{
-			Wd: PDF_WIDTH_IN_MM * MM_TO_RMPOINTS,
-			Ht: PDF_HEIGHT_IN_MM * MM_TO_RMPOINTS},
+			Wd: PDFWidthInMM * MMtoRMPoints,
+			Ht: PDFHeightInMM * MMtoRMPoints},
 	})
 
 	// set custom layer colours if provided
@@ -227,9 +241,24 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 	pdf.SetLineCapStyle("round")
 	pdf.SetLineJoinStyle("round")
 
+	// Iterate over pages using the rmfile iterator which provides a
+	// page number and the pdf to use (either the annotated pdf or the
+	// template). For annotated pdfs with inserted pages one might
+	// receive the following output from the iterator:
+	// pageno | inserted | template      | templatepageno
+	// -------+----------+---------------+---------------
+	// 0      | no       | annotated.pdf | 0
+	// 1      | yes      | template.pdf  | 0
+	// 2      | no       | annotated.pdf | 1
+
 	// Iterate over each page in the pdf
 	for i := 0; i < len(rmfile.Pages); i++ {
-		constructPageWithLayers(rmfile, i, pdf)
+		pageNo, pdfPageNo, inserted, isTemplate := rmfile.PageIterate()
+		rmfile.Debug(fmt.Sprintf(
+			"processing page %d %d inserted %t template %t\n",
+			pageNo, pdfPageNo, inserted, isTemplate,
+		))
+		constructPageWithLayers(rmfile, pdfPageNo, isTemplate, pdf)
 	}
 
 	err = pdf.OutputFileAndClose(outfile)
