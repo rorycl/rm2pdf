@@ -308,6 +308,10 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 		return rm, errors.New("neither a base pdf or template pdf were found")
 	}
 
+	if rm.RelPDFPath != "" && rm.PageCount != rm.OriginalPageCount && rm.RelPDFTemplatePath == "" {
+		return rm, errors.New("a template is needed to process inserted pages")
+	}
+
 	// extract each rm json page and construct the path to the .rm file
 	// itself
 	for i, rmj := range c.Pages {
