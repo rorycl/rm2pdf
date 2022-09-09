@@ -1,6 +1,6 @@
 # rm2pdf
 
-version 0.0.2
+version 0.0.3 : 09 September 2022
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
@@ -24,7 +24,13 @@ rm2pdf -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/o
 rm2pdf -c blue -c red -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/output4.pdf
 ```
 
-# Details
+## Update
+
+09 September 2022
+
+This 0.0.3 update supports pages inserted while annotating a PDF.
+
+## Details
 
 rm2pdf requires "bundles" of files created on the reMarkable tablet, including
 the associated `.metadata` and `.content` files, together with the `.rm` binary
@@ -55,9 +61,6 @@ Note that rm2pdf has only been tested on a reMarkable v1 tablet.
 
 ## Background
 
-This is a holiday project to learn go. Error handling in particular is pretty
-poor.
-
 The project includes rmparse/rmparse.go, a remarkable tablet Go port of
 reMarkable tablet "lines" or ".rm" file parser, with binary decoding hints drawn
 from rm2svg https://github.com/reHackable/maxio/blob/master/tools/rM2svg which
@@ -76,7 +79,7 @@ Developed with go 1.15 on 64bit Linux.
 
 Test:  `go test -v ./...`
 
-Build : `go build`; this should produce an executable called `rm2svg`.
+Build : `go build`; this should produce an executable called `rm2pdf`.
 
 ## License
 
