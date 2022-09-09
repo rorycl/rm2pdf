@@ -3,6 +3,7 @@ module github.com/rorycl/rm2pdf
 go 1.13
 
 require (
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jung-kurt/gofpdf v1.16.2

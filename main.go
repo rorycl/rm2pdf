@@ -76,6 +76,7 @@ func main() {
 
 	err := rmpdf.RM2PDF(options.Args.InputPath, options.Args.OutputFile, options.Template, options.Verbose, options.Colours)
 	if err != nil {
-		fmt.Printf("An error occurred: %v", err)
+		fmt.Printf("error: %v\n", err)
+		os.Exit(1)
 	}
 }
