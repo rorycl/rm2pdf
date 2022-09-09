@@ -9,6 +9,8 @@ package files
 import (
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 	// "fmt"
 )
 
@@ -141,5 +143,57 @@ func TestFilesXochitlWithoutPDF(t *testing.T) {
 	}
 	if rmf.Pages[0].LayerNames[0] != expected.Pages[0].LayerNames[0] {
 		t.Error("Page one second layer names not the same")
+	}
+}
+
+// TestInsertedPage checks if an inserted page is detected correctly
+func TestInsertedPage(t *testing.T) {
+
+	testUUID := "fbe9f971-03ba-4c21-a0e8-78dd921f9c4c"
+	template := ""
+
+	rmf, err := RMFiler("../testfiles/"+testUUID, template)
+	if err != nil {
+		t.Errorf("Could not open file %v", err)
+	}
+
+	expected := RMFileInfo{
+		RelPDFPath:        "../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c.pdf",
+		Identifier:        "fbe9f971-03ba-4c21-a0e8-78dd921f9c4c",
+		Version:           0,
+		VisibleName:       "insert-pages",
+		LastModified:      ptime("2022-09-09 14:13:39 +0100 BST"),
+		OriginalPageCount: 2,
+		PageCount:         3,
+		Pages: []RMPage{
+			{
+				PageNo:     0,
+				Identifier: "fa678373-8530-465d-a988-a0b158d957e4-metadata",
+				RelRMPath:  "../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c/fa678373-8530-465d-a988-a0b158d957e4.rm",
+				Exists:     true,
+				LayerNames: []string{"Layer 1"},
+			},
+			{
+				PageNo:     1,
+				Identifier: "0b8b6e65-926c-4269-9109-36fca8718c94-metadata",
+				RelRMPath:  "../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c/0b8b6e65-926c-4269-9109-36fca8718c94.rm",
+				Exists:     true,
+				LayerNames: []string{"Layer 1"},
+			},
+			{
+				PageNo:     2,
+				Identifier: "e2a69ab6-5c11-42d1-8d2d-9ce6569d9fdf-metadata",
+				RelRMPath:  "../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c/e2a69ab6-5c11-42d1-8d2d-9ce6569d9fdf.rm",
+				Exists:     true,
+				LayerNames: []string{"Layer 1"},
+			},
+		},
+		RedirectionPageMap: []int{0, -1, 1},
+		UseTemplate:        false,
+		Debugging:          false,
+	}
+
+	if !cmp.Equal(rmf, expected) {
+		t.Errorf("rmf != expected for insert page test")
 	}
 }

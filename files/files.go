@@ -23,15 +23,17 @@ import (
 // RMFileInfo is a struct defining the collected metadata about a PDF
 // from the reMarkable file collection
 type RMFileInfo struct {
-	RelPDFPath   string // full relative path to PDF
-	Identifier   string // the uuid used to identify the PDF file
-	Version      int    // version from metadata
-	VisibleName  string // visibleName from metadata (used in reMarkable interface)
-	LastModified time.Time
-	PageCount    int
-	Pages        []RMPage
-	UseTemplate  bool // a template pdf is in use
-	Debugging    bool
+	RelPDFPath         string // full relative path to PDF
+	Identifier         string // the uuid used to identify the PDF file
+	Version            int    // version from metadata
+	VisibleName        string // visibleName from metadata (used in reMarkable interface)
+	LastModified       time.Time
+	OriginalPageCount  int
+	PageCount          int
+	Pages              []RMPage
+	RedirectionPageMap []int // page insertion info
+	UseTemplate        bool  // a template pdf is in use
+	Debugging          bool
 }
 
 // Debug prints a message if the debugging switch is on
@@ -65,9 +67,12 @@ type rmMetadata struct {
 
 // Per-pdf file .content json file decoding
 type content struct {
-	FileType    string   `json:fileType`
-	Orientation string   `json:orientation`
-	Pages       []string `json:pages`
+	FileType           string   `json:fileType`
+	Orientation        string   `json:orientation`
+	Pages              []string `json:pages`
+	RedirectionPageMap []int    `json:redirectionPageMap`
+	OriginalPageCount  int      `json:originalPageCount`
+	PageCount          int      `json:pageCount`
 }
 
 // Per-pdf file .metadata json file decoding: epoch time property
@@ -132,7 +137,7 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 
 	// verify uuid
 	if _, err := uuid.Parse(hUUID); err != nil {
-		return rm, fmt.Errorf("uuid %s is invalid", hUUID)
+		return rm, fmt.Errorf("uuid '%s' is invalid", hUUID)
 	}
 	rm.Identifier = hUUID
 
@@ -190,7 +195,14 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 		return rm, err
 	}
 
-	rm.PageCount = len(c.Pages)
+	rm.PageCount = c.PageCount
+	rm.OriginalPageCount = c.OriginalPageCount
+	rm.RedirectionPageMap = c.RedirectionPageMap
+
+	if len(c.Pages) != rm.PageCount {
+		return rm, fmt.Errorf(
+			"number of rm pages %d != json pageCount %d", len(c.Pages), rm.PageCount)
+	}
 
 	// extract each rm json page and construct the path to the .rm file
 	// itself
