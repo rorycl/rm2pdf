@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jung-kurt/gofpdf v1.16.2
+	github.com/pdfcpu/pdfcpu v0.3.13 // indirect
 	github.com/phpdave11/gofpdi v1.0.13 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69
