@@ -165,6 +165,7 @@ func TestInsertedPage(t *testing.T) {
 		Version:            0,
 		VisibleName:        "insert-pages",
 		LastModified:       ptime("2022-09-09 14:13:39 +0100 BST"),
+		Orientation:        "portrait",
 		OriginalPageCount:  2,
 		PageCount:          3,
 		Pages: []RMPage{
@@ -239,5 +240,21 @@ func TestInsertedPage(t *testing.T) {
 			j.isTemplate != e.isTemplate {
 			t.Errorf("iter i %d expected %+v got %+v", i, e, j)
 		}
+	}
+}
+
+// TestHorizontal checks if a horizontal PDF is detected correctly
+func TestHorizontal(t *testing.T) {
+
+	testUUID := "e724bba2-266f-434d-aaf2-935d2b405aee"
+	template := ""
+
+	rmf, err := RMFiler("../testfiles/"+testUUID, template)
+	if err != nil {
+		t.Errorf("Could not open file %v", err)
+	}
+
+	if rmf.Orientation != "landscape" {
+		t.Errorf("Expected landscape orientation, got %s", rmf.Orientation)
 	}
 }

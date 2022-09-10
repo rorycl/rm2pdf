@@ -33,12 +33,13 @@ type RMFileInfo struct {
 	OriginalPageCount  int
 	PageCount          int
 	Pages              []RMPage
+	Orientation        string
 	RedirectionPageMap []int // page insertion info
-	Debugging          bool
 	// show inserted pages
 	insertedPages
 	// page number used for processing
 	thisPageNo int
+	Debugging  bool
 }
 
 // Debug prints a message if the debugging switch is on
@@ -282,6 +283,7 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	// assume that if OriginalPageCount is 0 this is from an historic
 	// .rm file (which did not have this field) and set it to be the
 	// same as PageCount
+	rm.Orientation = c.Orientation
 	rm.PageCount = c.PageCount
 	rm.OriginalPageCount = c.OriginalPageCount
 	if rm.OriginalPageCount == 0 {
