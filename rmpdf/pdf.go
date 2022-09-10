@@ -88,7 +88,11 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	}
 
 	bgpdf := gofpdi.ImportPage(pdf, pdfFile, pdfImportPage, "/MediaBox")
-	gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 210*MMtoRMPoints, 297*MMtoRMPoints)
+	if rmf.Orientation == "portrait" {
+		gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 210*MMtoRMPoints, 297*MMtoRMPoints)
+	} else {
+		gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 297*MMtoRMPoints, 210*MMtoRMPoints)
+	}
 	pdf.EndLayer()
 
 	// Initialise the .rm file parser if the .rm file exists, else return
@@ -171,12 +175,25 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 			segment := rm.Path.Segments[s-1]
 
 			// write rm segment to pdf path
-			if s == 1 {
-				pdf.MoveTo(float64(segment.X/Pts2RMPoints),
-					float64(segment.Y/Pts2RMPoints))
+			if rmf.Orientation == "portrait" {
+				// portrait
+				if s == 1 {
+					pdf.MoveTo(float64(segment.X/Pts2RMPoints),
+						float64(segment.Y/Pts2RMPoints))
+				} else {
+					pdf.LineTo(float64(segment.X/Pts2RMPoints),
+						float64(segment.Y/Pts2RMPoints))
+				}
 			} else {
-				pdf.LineTo(float64(segment.X/Pts2RMPoints),
-					float64(segment.Y/Pts2RMPoints))
+				// landscape format files need to be flipped
+				yBasis := (297 * MMtoRMPoints)
+				if s == 1 {
+					pdf.MoveTo(yBasis-float64(segment.Y/Pts2RMPoints),
+						float64(segment.X/Pts2RMPoints))
+				} else {
+					pdf.LineTo(yBasis-float64(segment.Y/Pts2RMPoints),
+						float64(segment.X/Pts2RMPoints))
+				}
 			}
 		}
 		pdf.DrawPath("D") // outlined only; use FD for filled and outlined
@@ -222,12 +239,24 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 	}
 
 	// See fpdf PageSize example
-	pdf := gofpdf.NewCustom(&gofpdf.InitType{
-		UnitStr: "pt",
-		Size: gofpdf.SizeType{
-			Wd: PDFWidthInMM * MMtoRMPoints,
-			Ht: PDFHeightInMM * MMtoRMPoints},
-	})
+	var pdf *gofpdf.Fpdf
+	if rmfile.Orientation == "portrait" {
+		pdf = gofpdf.NewCustom(&gofpdf.InitType{
+			UnitStr: "pt",
+			Size: gofpdf.SizeType{
+				Ht: PDFHeightInMM * MMtoRMPoints,
+				Wd: PDFWidthInMM * MMtoRMPoints,
+			},
+		})
+	} else {
+		pdf = gofpdf.NewCustom(&gofpdf.InitType{
+			UnitStr: "pt",
+			Size: gofpdf.SizeType{
+				Wd: PDFHeightInMM * MMtoRMPoints,
+				Ht: PDFWidthInMM * MMtoRMPoints,
+			},
+		})
+	}
 
 	// set custom layer colours if provided
 	if len(colours) > 0 {

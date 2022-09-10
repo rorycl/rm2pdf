@@ -83,3 +83,31 @@ func TestConvertWithInsertedPage(t *testing.T) {
 		t.Errorf("An rm2pdf error occurred: %v", err)
 	}
 }
+
+// TestConvertWithLandscape tests converting an rm file bundle in horizontal format
+func TestConvertWithLandscape(t *testing.T) {
+
+	testUUID := "e724bba2-266f-434d-aaf2-935d2b405aee"
+	template := ""
+
+	// make temporary file
+	tmpfile, err := ioutil.TempFile("", "example")
+	if err != nil {
+		t.Error(err)
+	}
+	tname := tmpfile.Name()
+	tname = tname + ".pdf"
+	defer os.Remove(tname)
+
+	colours := []LocalColour{
+		LocalColour{
+			Name:   "blue",
+			Colour: colornames.Blueviolet,
+		},
+	}
+
+	RM2PDF("../testfiles/"+testUUID, tname, template, false, colours)
+	if err != nil {
+		t.Errorf("An rm2pdf error occurred: %v", err)
+	}
+}
