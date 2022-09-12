@@ -258,3 +258,16 @@ func TestHorizontal(t *testing.T) {
 		t.Errorf("Expected landscape orientation, got %s", rmf.Orientation)
 	}
 }
+
+// TestExtensionIgnored checks that when providing an input with an extension
+// the extension is ignored
+func TestExtensionIgnored(t *testing.T) {
+
+	testUUID := "e724bba2-266f-434d-aaf2-935d2b405aee.arbitrary"
+	template := ""
+
+	_, err := RMFiler("../testfiles/"+testUUID, template)
+	if err != nil {
+		t.Errorf("Could not open file %v", err)
+	}
+}

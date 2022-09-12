@@ -229,6 +229,9 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 
 	rm := RMFileInfo{}
 
+	// trim suffix, so if a suffix is provided by mistake it is ignored
+	inputpath = strings.TrimSuffix(inputpath, filepath.Ext(inputpath))
+
 	// if the inputpath has '.pdf' at the end, chop it off
 	inputpath = strings.TrimSuffix(inputpath, ".pdf")
 
