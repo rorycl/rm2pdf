@@ -1,9 +1,20 @@
 # rm2pdf
 
-version 0.0.3 : 09 September 2022
+version 0.1.0 : 12 September 2022
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
+
+## Update
+
+12 September 2022
+
+This 0.1.0 release upgrades the release version to minor release 0.1
+since this is now beta quality software rather than alpha(!).
+
+This release adds support for landscape mode files.
+
+The previous update earlier this month supported pages inserted while annotating a PDF.
 
 ```
 rm2pdf -h
@@ -23,12 +34,6 @@ and the A4 template in `templates`.
 rm2pdf -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/output3.pdf
 rm2pdf -c blue -c red -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/output4.pdf
 ```
-
-## Update
-
-09 September 2022
-
-This 0.0.3 update supports pages inserted while annotating a PDF.
 
 ## Details
 
