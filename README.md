@@ -16,6 +16,9 @@ This release adds support for landscape mode files.
 
 The previous update earlier this month supported pages inserted while annotating a PDF.
 
+## Examples
+
+
 ```
 rm2pdf -h
 ```
