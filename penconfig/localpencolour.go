@@ -20,8 +20,8 @@ type LocalPenColour struct {
 	Colour color.RGBA
 }
 
-// Unmarshal generates the colour value for a colour string
-func (l *LocalPenColour) Unmarshal(value string) error {
+// colourConvert generates the colour value for a colour string
+func (l *LocalPenColour) colourConvert(value string) error {
 
 	var c color.RGBA
 	if len(value) > 4 && value[0:4] == "rgba" {

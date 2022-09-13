@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // penTypes are the currently understood pen types
@@ -48,15 +48,50 @@ var penWeights = []string{"narrow", "standard", "broad"}
 
 // PenConfig allows the configuration of a s
 type PenConfig struct {
-	Pen     string  `yaml:"pen"`
-	Weight  string  `yaml:"weight"`
-	Width   float32 `yaml:"width"`
-	Colour  string  `yaml:"color"`
-	Opacity float64 `yaml:"opacity"`
+	Pen     string         `yaml:"pen"`
+	Weight  string         `yaml:"weight"`
+	Width   float32        `yaml:"width"`
+	Colour  LocalPenColour `yaml:"color"`
+	Opacity float64        `yaml:"opacity"`
 }
 
 // LayerPenConfigs defines StrokeSettings by layer
 type LayerPenConfigs map[string][]PenConfig
+
+// UnmarshalYAML is a custom unmarshaller
+func (pc *PenConfig) UnmarshalYAML(value *yaml.Node) (err error) {
+
+	// auxilliary unmarshal struct
+	type AuxPenConfig struct {
+		Pen     string  `yaml:"pen"`
+		Weight  string  `yaml:"weight"`
+		Width   float32 `yaml:"width"`
+		Colour  string  `yaml:"color"`
+		Opacity float64 `yaml:"opacity"`
+	}
+
+	var apc AuxPenConfig
+	err = value.Decode(&apc)
+	if err != nil {
+		return fmt.Errorf("Yaml parsing error: %v", err)
+	}
+
+	lpc := LocalPenColour{}
+	err = lpc.colourConvert(apc.Colour)
+	if err != nil {
+		return fmt.Errorf("colour convert error: %w", err)
+	}
+
+	*pc = PenConfig{
+		Pen:     apc.Pen,
+		Weight:  apc.Weight,
+		Width:   apc.Width,
+		Colour:  lpc,
+		Opacity: apc.Opacity,
+	}
+
+	return nil
+}
 
 // LoadYaml reads bytes into a PenConfig structure
 func LoadYaml(yamlByte []byte) (LayerPenConfigs, error) {

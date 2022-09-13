@@ -34,7 +34,7 @@ all:
 
 }
 
-// TestPenConfigParseFail1 tests basic parsing
+// TestPenConfigParseFail1 tests basic parsing failure
 func TestPenConfigParseFail1(t *testing.T) {
 
 	y := []byte(`
@@ -58,7 +58,7 @@ func TestPenConfigParseFail1(t *testing.T) {
 	}
 }
 
-// TestPenConfigParseFail2 tests basic parsing
+// TestPenConfigParseFail2 tests basic parsing failure
 func TestPenConfigParseFail2(t *testing.T) {
 
 	y := []byte(`
@@ -77,4 +77,22 @@ func TestPenConfigParseFail2(t *testing.T) {
 	if !strings.Contains(err.Error(), expected) {
 		t.Errorf("error should contain '%s'", expected)
 	}
+}
+
+// TestPenConfigParseOK2 tests basic parsing
+func TestPenConfigParseOK2(t *testing.T) {
+
+	y := []byte(`
+"all":
+  - pen:     fineliner
+    weight:  narrow
+    width:   0.8
+    color:   "#963387"
+    opacity: 0.8`)
+
+	lpc, err := LoadYaml(y)
+	if err != nil {
+		t.Errorf("load config unexpectedly errored with %s", err)
+	}
+	t.Log(lpc)
 }

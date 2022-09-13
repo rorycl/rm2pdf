@@ -58,7 +58,7 @@ func TestLocalPenColour(t *testing.T) {
 	} {
 
 		l := LocalPenColour{}
-		err := l.Unmarshal(test.cName)
+		err := l.colourConvert(test.cName)
 		if err != nil && test.isErr == false {
 			t.Errorf("%d test %s error %s", i, test.title, err)
 		}
