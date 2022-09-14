@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -19,6 +20,10 @@ func TestInfo(t *testing.T) {
 	}
 	if fmt.Sprint(p.Orientation) != "landscape" {
 		t.Errorf("orientation should be landscape, got %s", fmt.Sprint(p.Orientation))
+	}
+
+	if !strings.Contains(fmt.Sprint(p), "Filepath") {
+		t.Errorf("String function for PDFFile doesn't work")
 	}
 }
 
