@@ -130,6 +130,20 @@ func (s *StrokeSetting) Width(penwidth float32) float64 {
 	return float64(r)
 }
 
+// NaturalWidth reports pen widths as "narrow", "standard" or "broad"
+func (s *StrokeSetting) NaturalWidth(penwidth float32) string {
+
+	p := float64(penwidth)
+
+	switch math.Round(p*1000) / 1000 {
+	case 1.875:
+		return "narrow"
+	case 2.125:
+		return "broad"
+	}
+	return "standard"
+}
+
 // Return the rbg components of the stroke's colour
 func (s *StrokeSetting) toRGB() (int, int, int) {
 	r := int(s.Colour.R)
@@ -141,11 +155,11 @@ func (s *StrokeSetting) toRGB() (int, int, int) {
 // Given a colour, determine if the stroke is overrideable (using the
 // ColourOverride attribute); if so return the RGB of the
 // given colour, else return the RGB of the native colour
-func (s *StrokeSetting) selectColour(lc *LocalColour) (int, int, int) {
+func (s *StrokeSetting) selectColour(lc *LocalColour, force bool) (int, int, int) {
 	c := color.RGBA{}
 	if lc.Name == "" || lc.Name == "empty" {
 		c = s.Colour
-	} else if !s.ColourOverride {
+	} else if !s.ColourOverride && !force {
 		c = s.Colour
 	} else {
 		c = lc.Colour

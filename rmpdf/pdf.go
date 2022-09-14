@@ -15,6 +15,7 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
 	"github.com/rorycl/rm2pdf/files"
+	"github.com/rorycl/rm2pdf/penconfig"
 	"github.com/rorycl/rm2pdf/rmparse"
 )
 
@@ -46,6 +47,9 @@ var UnknownPens = make(map[int]int)
 // List of colours to use, by layer, for pens with ColourOverride ==
 // true
 var layerColours = []LocalColour{}
+
+// penConfigs are the set of custom pen settings by layer
+var penConfigs = &penconfig.LayerPenConfigs{}
 
 // Extract layer id from register by name, first initialising the PDF
 // layerid for that name if necessary
@@ -115,9 +119,8 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 		return err
 	}
 
-	// set custom colours for layers, if provided, and make sure the
-	// layerColours slice is the same length as the number of rmPage.LayerNames
-	var pageLayerColours = make([]LocalColour, len(rmPage.LayerNames))
+	// set custom colours for layers, if provided
+	pageLayerColours := map[int]LocalColour{}
 	for c := 0; c < len(rmPage.LayerNames); c++ {
 		if c <= len(layerColours)-1 {
 			pageLayerColours[c] = layerColours[c]
@@ -133,6 +136,8 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	pdf.BeginLayer(layerID)
 
 	// start parsing; note that pdflayers are dealt with sequentially
+	// rm.Parse works on a per-path basis, implicity therefore on a
+	// per-pen basis
 	for rm.Parse() {
 
 		// start a new PDF layer if necessary
@@ -156,17 +161,50 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 		// if opacity is not 1.0, set the alpha blending channel to the
 		// required fraction of 1.0
 		// Also record if an pen type is not found.
-		layerCustomColour := pageLayerColours[layerNo-1]
-		ss, ok := StrokeSettings[StrokeMap[int(path.Pen)]]
+		penName, ok := StrokeMap[int(path.Pen)]
 		if !ok {
 			UnknownPens[int(path.Pen)]++
-			ss = StrokeSettings["fineliner"]
+			penName = "fineliner"
 		}
-		pdf.SetDrawColor(ss.selectColour(&layerCustomColour))
+		ss := StrokeSettings[penName]
+
+		width := ss.Width(path.Width)
+		opacity := ss.Opacity // inclusive range [0,1]
+
+		// load custom pen settings if any exist
+		penWidthName := ss.NaturalWidth(path.Width)
+		// log.Printf("layer %d, name %s, width %s\n", layerNo-1, penName, penWidthName)
+		customPen, ok := penConfigs.GetPen(layerNo-1, penName, penWidthName)
+		if ok {
+			width = customPen.Width
+			opacity = customPen.Opacity
+		}
+
+		// set colours, first checking to see if there is a custom pen
+		// defined in the configuration file, then setting a colour
+		// override if set
+		//
 		// pdf.SetFillSpotColor("White", 100) // 0% tint
-		pdf.SetLineWidth(ss.Width(path.Width))
-		if ss.Opacity != 1.0 {
-			pdf.SetAlpha(ss.Opacity, "Normal")
+		ok = false
+		var layerCustomColour LocalColour
+
+		layerCustomColour, ok = pageLayerColours[layerNo-1]
+		if ok {
+			pdf.SetDrawColor(ss.selectColour(&layerCustomColour, false))
+		} else if customPen != nil {
+			// force
+			pdf.SetDrawColor(ss.selectColour(
+				&LocalColour{customPen.Colour.Name, customPen.Colour.Colour},
+				true,
+			))
+		}
+
+		// set width
+		pdf.SetLineWidth(width)
+
+		// set opacity
+		if opacity != 1.0 {
+			pdf.SetAlpha(opacity, "Normal")
 		}
 
 		// rmf.Debug(fmt.Sprintf("Pen : %s Width : %f, calcwidth %f, opacity %f", penName, path.Width, ss.Width(path.Width), ss.Opacity))
@@ -197,8 +235,9 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 			}
 		}
 		pdf.DrawPath("D") // outlined only; use FD for filled and outlined
-		if ss.Opacity != 1.0 {
-			// reset opacity
+
+		// reset opacity
+		if opacity != 1.0 {
 			pdf.SetAlpha(1.0, "Normal")
 		}
 	}
@@ -218,8 +257,9 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 // template file's first page is recycled) and then adds each layer of
 // the associated page's .rm file on top of that, finally writing the
 // resulting pdf to outfile. Custom colours may be specified for each
-// layer.
-func RM2PDF(inputpath string, outfile string, template string, verbose bool, colours []LocalColour) error {
+// layer. Settings may alternatively be supplied from a settings
+// configuration file.
+func RM2PDF(inputpath, outfile, template, settings string, verbose bool, colours []LocalColour) error {
 
 	// initialise struct containing information about the files
 	rmfile, err := files.RMFiler(inputpath, template)
@@ -261,6 +301,15 @@ func RM2PDF(inputpath string, outfile string, template string, verbose bool, col
 	// set custom layer colours if provided
 	if len(colours) > 0 {
 		layerColours = colours
+	}
+
+	// pen configuration file
+	if settings != "" {
+		var err error
+		penConfigs, err = penconfig.NewPenConfigFromFile(settings)
+		if err != nil {
+			fmt.Errorf("settings file load error: %w", err)
+		}
 	}
 
 	// Make colour (White in CMYK notation) for transparent fill

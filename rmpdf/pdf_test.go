@@ -28,7 +28,7 @@ func TestConvertWithPDF(t *testing.T) {
 	tname := tmpfile.Name()
 	defer os.Remove(tname)
 
-	RM2PDF("../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf", tname, "", false, []LocalColour{})
+	RM2PDF("../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf", tname, "", "", false, []LocalColour{})
 	if err != nil {
 		t.Errorf("An rm2pdf error occurred: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestConvertWithoutPDF(t *testing.T) {
 		},
 	}
 
-	RM2PDF("../testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7", tname, "../templates/A4.pdf", false, colours)
+	RM2PDF("../testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7", tname, "../templates/A4.pdf", "", false, colours)
 	if err != nil {
 		t.Errorf("An rm2pdf error occurred: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestConvertWithInsertedPage(t *testing.T) {
 		},
 	}
 
-	RM2PDF("../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c", tname, "../templates/A4.pdf", false, colours)
+	RM2PDF("../testfiles/fbe9f971-03ba-4c21-a0e8-78dd921f9c4c", tname, "../templates/A4.pdf", "", false, colours)
 	if err != nil {
 		t.Errorf("An rm2pdf error occurred: %v", err)
 	}
@@ -106,7 +106,54 @@ func TestConvertWithLandscape(t *testing.T) {
 		},
 	}
 
-	RM2PDF("../testfiles/"+testUUID, tname, template, false, colours)
+	RM2PDF("../testfiles/"+testUUID, tname, template, "", false, colours)
+	if err != nil {
+		t.Errorf("An rm2pdf error occurred: %v", err)
+	}
+}
+
+// TestWithCustomSettings tests setting custom pens
+func TestWithCustomSettings(t *testing.T) {
+
+	testUUID := "e724bba2-266f-434d-aaf2-935d2b405aee"
+	template := ""
+
+	// make temporary file
+	tmpfile, err := ioutil.TempFile("", "example")
+	if err != nil {
+		t.Error(err)
+	}
+	tname := tmpfile.Name()
+	tname = tname + ".pdf"
+	defer os.Remove(tname)
+
+	// write custom configuration to temporary file
+	configFile, err := ioutil.TempFile("", "config")
+	if err != nil {
+		t.Error(err)
+	}
+	cName := configFile.Name()
+	os.Remove(cName)
+	cName = cName + ".yaml"
+	defer os.Remove(cName)
+
+	fo, err := os.Create(cName)
+	if err != nil {
+		t.Fatalf("could not open file %s for writing", cName)
+	}
+	_, _ = fo.Write([]byte(`
+---
+all:
+  - pen:     pen
+    weight:  standard
+    width:   3.0
+    color:   red
+    opacity: 0.7
+`))
+	fo.Sync()
+
+	colours := []LocalColour{}
+	RM2PDF("../testfiles/"+testUUID, tname, template, cName, false, colours)
 	if err != nil {
 		t.Errorf("An rm2pdf error occurred: %v", err)
 	}

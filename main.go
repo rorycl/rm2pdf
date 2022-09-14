@@ -55,6 +55,7 @@ rm2pdf [-v] [-c red] [-c green] [-c ...] `
 // Options are flag options
 type Options struct {
 	Verbose  bool                `short:"v" long:"verbose"  description:"show verbose output\nthis presently does not do much"`
+	Settings string              `short:"s" long:"template" description:"path to customised pen settings file"`
 	Template string              `short:"t" long:"template" description:"path to a single page A4 template to use when no UUID.pdf exists\nuseful for processing sketches without a backing PDF"`
 	Colours  []rmpdf.LocalColour `short:"c" long:"colours"  description:"colour by layer\nuse several -c flags in series to select different colours\ne.g. -c red -c blue -c green for layers 1, 2 and 3.\nSee golang.org/x/image/colornames for the colours that can be used"`
 	Args     struct {
@@ -74,7 +75,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err := rmpdf.RM2PDF(options.Args.InputPath, options.Args.OutputFile, options.Template, options.Verbose, options.Colours)
+	err := rmpdf.RM2PDF(options.Args.InputPath, options.Args.OutputFile, options.Template, options.Settings, options.Verbose, options.Colours)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		os.Exit(1)

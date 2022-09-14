@@ -30,7 +30,11 @@ all:
 	if err != nil {
 		t.Errorf("load config error %s : %s", y, err)
 	}
-	t.Log(lpc)
+	p, ok := lpc.GetPen(1, "fineliner", "narrow")
+	if !ok {
+		t.Errorf("could not get pen 1/fineliner/narrow")
+	}
+	t.Log("got pen ", p)
 
 }
 
@@ -45,7 +49,7 @@ func TestPenConfigParseFail1(t *testing.T) {
     color:   blue
     opacity: 0.8`)
 
-	_, err := LoadYaml(y)
+	lpc, err := LoadYaml(y)
 	if err == nil {
 		t.Error("load config should error with invalid layer name")
 	}
@@ -56,6 +60,11 @@ func TestPenConfigParseFail1(t *testing.T) {
 	if !strings.Contains(err.Error(), expected) {
 		t.Errorf("error should contain '%s'", expected)
 	}
+	p, ok := lpc.GetPen(1, "nonsense", "problem")
+	if ok {
+		t.Errorf("got pen 1/nonsense/problem")
+	}
+	t.Logf("empty pen %+v : %t", p, p == (&PenConfig{}))
 }
 
 // TestPenConfigParseFail2 tests basic parsing failure

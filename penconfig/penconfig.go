@@ -19,6 +19,8 @@ package penconfig
 
 import (
 	"fmt"
+	"image/color"
+	"os"
 	"strconv"
 	"strings"
 
@@ -50,13 +52,38 @@ var penWeights = []string{"narrow", "standard", "broad"}
 type PenConfig struct {
 	Pen     string         `yaml:"pen"`
 	Weight  string         `yaml:"weight"`
-	Width   float32        `yaml:"width"`
+	Width   float64        `yaml:"width"`
 	Colour  LocalPenColour `yaml:"color"`
 	Opacity float64        `yaml:"opacity"`
 }
 
 // LayerPenConfigs defines StrokeSettings by layer
 type LayerPenConfigs map[string][]PenConfig
+
+// GetPen returns the custom pen setting for a 0-indexed layer, penName
+// and penWidth (see penWeights)
+func (lpc LayerPenConfigs) GetPen(layerNo int, penName, penWidth string) (*PenConfig, bool) {
+
+	var pc PenConfig
+	var layerPens []PenConfig
+	var ok bool
+
+	layerPens, ok = lpc[strconv.Itoa(layerNo)]
+	if !ok {
+		// the magic word "all" covers all layers
+		layerPens, ok = lpc["all"]
+	}
+	if !ok {
+		return &pc, false
+	}
+
+	for _, pen := range layerPens {
+		if pen.Pen == penName && pen.Weight == penWidth {
+			return &pen, true
+		}
+	}
+	return &pc, false
+}
 
 // UnmarshalYAML is a custom unmarshaller
 func (pc *PenConfig) UnmarshalYAML(value *yaml.Node) (err error) {
@@ -65,7 +92,7 @@ func (pc *PenConfig) UnmarshalYAML(value *yaml.Node) (err error) {
 	type AuxPenConfig struct {
 		Pen     string  `yaml:"pen"`
 		Weight  string  `yaml:"weight"`
-		Width   float32 `yaml:"width"`
+		Width   float64 `yaml:"width"`
 		Colour  string  `yaml:"color"`
 		Opacity float64 `yaml:"opacity"`
 	}
@@ -93,16 +120,21 @@ func (pc *PenConfig) UnmarshalYAML(value *yaml.Node) (err error) {
 	return nil
 }
 
+// GetColour returns the penconfig color.RGBA colour
+func (pc *PenConfig) GetColour() color.RGBA {
+	return pc.Colour.Colour
+}
+
 // LoadYaml reads bytes into a PenConfig structure
-func LoadYaml(yamlByte []byte) (LayerPenConfigs, error) {
+func LoadYaml(yamlByte []byte) (*LayerPenConfigs, error) {
 
 	var lpc LayerPenConfigs
 	err := yaml.Unmarshal(yamlByte, &lpc)
 	if err != nil {
-		return lpc, err
+		return &lpc, err
 	}
 	err = lpc.check()
-	return lpc, err
+	return &lpc, err
 }
 
 // check checks the validity of the configuration file
@@ -164,4 +196,17 @@ func (lpc LayerPenConfigs) check() error {
 		}
 	}
 	return nil
+}
+
+// NewPenConfigFromFile loads a pen configuration yaml file
+func NewPenConfigFromFile(filePath string) (lpc *LayerPenConfigs, err error) {
+
+	contents, err := os.ReadFile(filePath)
+	if err != nil {
+		return lpc, fmt.Errorf("could not read file %s: %w", filePath, err)
+	}
+
+	lpc, err = LoadYaml(contents)
+	return lpc, err
+
 }
