@@ -10,6 +10,7 @@ package rmpdf
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/jung-kurt/gofpdf"
@@ -49,7 +50,7 @@ var UnknownPens = make(map[int]int)
 var layerColours = []LocalColour{}
 
 // penConfigs are the set of custom pen settings by layer
-var penConfigs = &penconfig.LayerPenConfigs{}
+var penConfigs = make(penconfig.LayerPenConfigs)
 
 // Extract layer id from register by name, first initialising the PDF
 // layerid for that name if necessary
@@ -61,12 +62,14 @@ func layerIDFromRegister(name string, pdf *gofpdf.Fpdf) int {
 }
 
 // Construct a pdf page with layers from rm files described by rmf
-// RMFileInfo at 0-indexed page number, to be added to pdf.
-// The existing pdf is put in a "Background" layer, and the other .rm
-// file layers are put into subsequent layers with a default PDF
-// visibility of "true".
+// RMFileInfo at 0-indexed page number, to be added to pdf. The existing
+// pdf (annotated pdf, template pdf, or embedded template), described by
+// sourceFH, is put in a "Background" layer, and the other .rm file
+// layers are put into subsequent layers with a default PDF visibility
+// of "true".
+//
 // Note that eraser types are presently skipped.
-func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useTemplate bool, pdf *gofpdf.Fpdf) error {
+func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useTemplate bool, sourceFH *io.ReadSeeker, pdf *gofpdf.Fpdf) error {
 
 	// add a new page
 	pdf.AddPage()
@@ -85,13 +88,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	// rmf.PageIterate from caller, whose pagenumbers are 0-indexed
 	pdfImportPage := pdfPageNo + 1
 
-	// switch between annotated and template file
-	pdfFile := rmf.RelPDFPath
-	if useTemplate {
-		pdfFile = rmf.RelPDFTemplatePath
-	}
-
-	bgpdf := gofpdi.ImportPage(pdf, pdfFile, pdfImportPage, "/MediaBox")
+	bgpdf := gofpdi.ImportPageFromStream(pdf, sourceFH, pdfImportPage, "/MediaBox")
 	rmf.Debug(fmt.Sprintf("orientation %s", rmf.Orientation))
 	if rmf.Orientation == "portrait" {
 		gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 210*MMtoRMPoints, 297*MMtoRMPoints)
@@ -193,7 +190,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 
 		layerCustomColour, ok = pageLayerColours[layerNo-1]
 		if ok {
-			rmf.Debug(fmt.Sprintf("  path %4d : using general layer colour %s", pathNum, layerCustomColour))
+			rmf.Debug(fmt.Sprintf("  path %4d : using general layer colour %s", pathNum, layerCustomColour.Name))
 			pdf.SetDrawColor(ss.selectColour(&layerCustomColour, false))
 		} else if customPen != nil {
 			// force
@@ -263,8 +260,8 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 // template file's first page is recycled) and then adds each layer of
 // the associated page's .rm file on top of that, finally writing the
 // resulting pdf to outfile. Custom colours may be specified for each
-// layer. Settings may alternatively be supplied from a settings
-// configuration file.
+// layer. Settings may also be supplied from a settings configuration
+// file.
 func RM2PDF(inputpath, outfile, template, settings string, verbose bool, colours []LocalColour) error {
 
 	// initialise struct containing information about the files
@@ -337,12 +334,12 @@ func RM2PDF(inputpath, outfile, template, settings string, verbose bool, colours
 
 	// Iterate over each page in the pdf
 	for i := 0; i < len(rmfile.Pages); i++ {
-		pageNo, pdfPageNo, inserted, isTemplate := rmfile.PageIterate()
+		pageNo, pdfPageNo, inserted, isTemplate, pdfFH := rmfile.PageIterate()
 		rmfile.Debug(fmt.Sprintf(
 			"processing page %d %d inserted %t template %t",
 			pageNo, pdfPageNo, inserted, isTemplate,
 		))
-		constructPageWithLayers(rmfile, pageNo, pdfPageNo, isTemplate, pdf)
+		constructPageWithLayers(rmfile, pageNo, pdfPageNo, isTemplate, pdfFH, pdf)
 	}
 
 	err = pdf.OutputFileAndClose(outfile)
