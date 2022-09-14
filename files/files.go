@@ -8,9 +8,11 @@ RCL December 2019
 package files
 
 import (
+	"embed"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,20 +23,27 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:embed "A4.pdf"
+var embeddedA4File embed.FS
+
 // RMFileInfo is a struct defining the collected metadata about a PDF
 // from the reMarkable file collection
 type RMFileInfo struct {
-	RelPDFPath         string // full relative path to PDF
-	RelPDFTemplatePath string // full relative path to PDF template
-	Identifier         string // the uuid used to identify the PDF file
-	Version            int    // version from metadata
-	VisibleName        string // visibleName from metadata (used in reMarkable interface)
-	LastModified       time.Time
-	OriginalPageCount  int
-	PageCount          int
-	Pages              []RMPage
-	Orientation        string
-	RedirectionPageMap []int // page insertion info
+	RelPDFPath           string // full relative path to PDF
+	RelPDFPathFH         *os.File
+	RelPDFTemplatePath   string // full relative path to PDF template
+	RelPDFTemplatePathFH *os.File
+	EmbeddedTemplateFH   fs.File // embedded template
+	useEmbeddedTemplate  bool
+	Identifier           string // the uuid used to identify the PDF file
+	Version              int    // version from metadata
+	VisibleName          string // visibleName from metadata (used in reMarkable interface)
+	LastModified         time.Time
+	OriginalPageCount    int
+	PageCount            int
+	Pages                []RMPage
+	Orientation          string
+	RedirectionPageMap   []int // page insertion info
 	// show inserted pages
 	insertedPages
 	// page number used for processing
@@ -47,6 +56,28 @@ func (r *RMFileInfo) Debug(d string) {
 	if r.Debugging {
 		fmt.Println(d)
 	}
+}
+
+// loadFiles loads the PDF file filehandles
+func (r *RMFileInfo) loadFiles() error {
+	var err error
+	if r.RelPDFPath != "" {
+		r.RelPDFPathFH, err = os.Open(r.RelPDFPath)
+		if err != nil {
+			return fmt.Errorf("could not open pdf file %s", err)
+		}
+	}
+	if r.RelPDFTemplatePath != "" {
+		r.RelPDFTemplatePathFH, err = os.Open(r.RelPDFTemplatePath)
+		if err != nil {
+			return fmt.Errorf("could not open template file %s", err)
+		}
+	}
+	r.EmbeddedTemplateFH, err = embeddedA4File.Open("A4.pdf")
+	if err != nil {
+		return fmt.Errorf("could not open embedded template file %s", err)
+	}
+	return nil
 }
 
 // InsertedPages is a public export of the embedded insertedPages human
@@ -103,14 +134,22 @@ func (r *RMFileInfo) registerInsertedPages() {
 // 2      | 1       | no       | annotated.pdf |
 //
 // This function returns 0-indexed pdf pages
-func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate bool) {
+func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate bool, reader io.Reader) {
 	pageNo = r.thisPageNo
 	r.thisPageNo++
+
+	tplFH := func() io.Reader {
+		if r.useEmbeddedTemplate {
+			return r.EmbeddedTemplateFH
+		}
+		return r.RelPDFTemplatePathFH
+	}()
 
 	// if there is only a template, always return the first page
 	if r.RelPDFPath == "" {
 		pdfPageNo = 0
 		isTemplate = true
+		reader = tplFH
 		return
 	}
 
@@ -122,8 +161,12 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 		pdfPageNo = 0
 		inserted = true
 		isTemplate = true
+		reader = tplFH
 		return
 	}
+
+	// remaining target is the annotated file
+	reader = r.RelPDFPathFH
 
 	// if the annotated pdf has inserted pages, calculate the offset of
 	// the original pdf to use
@@ -220,8 +263,10 @@ func checkFileExists(f string) error {
 
 // RMFiler collects information from the reMarkable files associated
 // with the uuid of interest. Either a pdf at <path/uuid.pdf> is
-// expected, or a single A4 page template is to be provided instead. The
-// uuid (identified by its filepath plus <uuid>), is used to collect
+// expected, or a single A4 page template. If a template is not
+// explictly provided an embedded A4 template is used.
+//
+// The uuid (identified by its filepath plus <uuid>), is used to collect
 // information from the .metadata and .content files. It then collects
 // layer information for each associated .rm file in a directory named
 // by the uuid of the pdf.
@@ -316,11 +361,13 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	}
 
 	if rm.RelPDFPath == "" && rm.RelPDFTemplatePath == "" {
-		return rm, errors.New("neither a base pdf or template pdf were found")
+		rm.useEmbeddedTemplate = true
 	}
 
-	if rm.RelPDFPath != "" && rm.PageCount != rm.OriginalPageCount && rm.RelPDFTemplatePath == "" {
-		return rm, errors.New("a template is needed to process inserted pages")
+	// load pdf file handles
+	err = rm.loadFiles()
+	if err != nil {
+		return rm, err
 	}
 
 	// extract each rm json page and construct the path to the .rm file
@@ -358,14 +405,14 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 
 		body, err := ioutil.ReadFile(rmJSONPath)
 		if err != nil {
-			panic(err)
+			return rm, fmt.Errorf("could not read metadata file %s: %s", rmJSONPath, err)
 		}
 
 		// read json from rm .json file
 		var m rmMetadata
 		err = json.Unmarshal(body, &m)
 		if err != nil {
-			panic(err)
+			return rm, fmt.Errorf("could not unmarshal metadata file %s: %s", rmJSONPath, err)
 		}
 
 		for _, v := range m.Layers {

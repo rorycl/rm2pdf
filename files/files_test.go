@@ -7,6 +7,7 @@ RCL January 2020
 package files
 
 import (
+	"io"
 	"testing"
 	"time"
 
@@ -195,7 +196,7 @@ func TestInsertedPage(t *testing.T) {
 		Debugging:          false,
 	}
 
-	if !cmp.Equal(rmf, expected, cmpopts.IgnoreUnexported(rmf)) {
+	if !cmp.Equal(rmf, expected, cmpopts.IgnoreUnexported(rmf), cmpopts.IgnoreInterfaces(struct{ io.Reader }{})) {
 		t.Errorf("rmf != expected for insert page test")
 	}
 
@@ -231,7 +232,8 @@ func TestInsertedPage(t *testing.T) {
 	}
 
 	for i := 0; i < rmf.PageCount; i++ {
-		pageNo, pdfPageNo, inserted, isTemplate := rmf.PageIterate()
+		// ignore filehandle in last assignment
+		pageNo, pdfPageNo, inserted, isTemplate, _ := rmf.PageIterate()
 		j := iterExpected{pageNo, pdfPageNo, inserted, isTemplate}
 		e := iExpectArray[i]
 		if j.pageNo != e.pageNo ||
