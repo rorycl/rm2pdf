@@ -1,0 +1,75 @@
+---
+# Example pen configuration for rm2pdf
+#
+# The file is keyed by layer name, with a list of pens under each. The
+# "all" layer sets defaults for all layers. Other layers are indexed by
+# the layer number (a string), 0 indexed.
+#
+# There are generally three pen weights: narrow, standard and broad
+# (although this doesn't affect pens like the highlighter). If a pen is
+# listed here but in standard weight and a narrow or broad weight is
+# found, it is written using the factors set out in rmpdf/strok.Width
+
+all:
+  - pen: pen
+    weight: standard
+    color: black
+    width : 2.0
+    opacity: 1
+
+  - pen: highlighter
+    weight: standard
+    color: blue
+    width : 15
+    opacity: 1
+
+  - pen: fineliner
+    weight: standard
+    color: blue
+    width : 1.0
+    opacity: 1
+
+  - pen: marker
+    weight: standard
+    color: black
+    width : 3.8
+    opacity: 1
+
+  - pen: marker
+    weight: standard
+    color: "rgba(68,68,68,0.8)"
+    width : 1.75
+    opacity: 0.8
+
+  - pen: pencil
+    weight: standard
+    color: black
+    width : 1.9
+    opacity: 1
+
+  - pen: mechanical pencil
+    weight: standard
+    color: black
+    width : 1.2
+    opacity: 0.7 
+
+  - pen: paint
+    weight: standard
+    color: "rgba(55,55,55,0.7)" # dark grey
+    width : 1.2
+    opacity: 0.7 
+
+# first layer is layer 0
+"0":
+  - pen:     pen
+    weight:  standard
+    width:   3
+    color:   red
+    opacity: 0.5
+
+  - pen:     fineliner
+    weight:  narrow
+    width:   0.8
+    color:   blue
+    opacity: 0.8
+

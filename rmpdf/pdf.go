@@ -92,6 +92,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	}
 
 	bgpdf := gofpdi.ImportPage(pdf, pdfFile, pdfImportPage, "/MediaBox")
+	rmf.Debug(fmt.Sprintf("orientation %s", rmf.Orientation))
 	if rmf.Orientation == "portrait" {
 		gofpdi.UseImportedTemplate(pdf, bgpdf, 0, 0, 210*MMtoRMPoints, 297*MMtoRMPoints)
 	} else {
@@ -107,7 +108,6 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	}
 
 	rmf.Debug(fmt.Sprintf("rmfile %s", rmPage.RelRMPath))
-
 	rmF, err := os.Open(rmPage.RelRMPath)
 	if err != nil {
 		return err
@@ -134,16 +134,19 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	layerName := rmPage.LayerNames[layerNo-1]
 	layerID = layerIDFromRegister(layerName, pdf)
 	pdf.BeginLayer(layerID)
+	rmf.Debug(fmt.Sprintf("Beginning layer %d", layerNo))
 
 	// start parsing; note that pdflayers are dealt with sequentially
 	// rm.Parse works on a per-path basis, implicity therefore on a
 	// per-pen basis
+	pathNum := 0
 	for rm.Parse() {
 
 		// start a new PDF layer if necessary
 		if rm.Path.Layer != uint32(layerNo) {
 			pdf.EndLayer()
 			layerNo++
+			rmf.Debug(fmt.Sprintf("Beginning layer %d", layerNo))
 			layerName := rmPage.LayerNames[layerNo-1]
 			layerID = layerIDFromRegister(layerName, pdf)
 			pdf.BeginLayer(layerID)
@@ -173,9 +176,9 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 
 		// load custom pen settings if any exist
 		penWidthName := ss.NaturalWidth(path.Width)
-		// log.Printf("layer %d, name %s, width %s\n", layerNo-1, penName, penWidthName)
 		customPen, ok := penConfigs.GetPen(layerNo-1, penName, penWidthName)
 		if ok {
+			rmf.Debug(fmt.Sprintf("  path %4d : using custom pen %+v", pathNum, customPen))
 			width = customPen.Width
 			opacity = customPen.Opacity
 		}
@@ -190,6 +193,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 
 		layerCustomColour, ok = pageLayerColours[layerNo-1]
 		if ok {
+			rmf.Debug(fmt.Sprintf("  path %4d : using general layer colour %s", pathNum, layerCustomColour))
 			pdf.SetDrawColor(ss.selectColour(&layerCustomColour, false))
 		} else if customPen != nil {
 			// force
@@ -240,6 +244,8 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 		if opacity != 1.0 {
 			pdf.SetAlpha(1.0, "Normal")
 		}
+
+		pathNum++
 	}
 
 	// close the layer
@@ -308,7 +314,7 @@ func RM2PDF(inputpath, outfile, template, settings string, verbose bool, colours
 		var err error
 		penConfigs, err = penconfig.NewPenConfigFromFile(settings)
 		if err != nil {
-			fmt.Errorf("settings file load error: %w", err)
+			return fmt.Errorf("settings file load error: %w", err)
 		}
 	}
 
@@ -333,7 +339,7 @@ func RM2PDF(inputpath, outfile, template, settings string, verbose bool, colours
 	for i := 0; i < len(rmfile.Pages); i++ {
 		pageNo, pdfPageNo, inserted, isTemplate := rmfile.PageIterate()
 		rmfile.Debug(fmt.Sprintf(
-			"processing page %d %d inserted %t template %t\n",
+			"processing page %d %d inserted %t template %t",
 			pageNo, pdfPageNo, inserted, isTemplate,
 		))
 		constructPageWithLayers(rmfile, pageNo, pdfPageNo, isTemplate, pdf)

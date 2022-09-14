@@ -67,6 +67,10 @@ func (lpc LayerPenConfigs) GetPen(layerNo int, penName, penWidth string) (*PenCo
 	var pc PenConfig
 	var layerPens []PenConfig
 	var ok bool
+	// Width sets pen widths. Each rm pen comes in three widths, 1.875,
+	// 2.000, 2.125, so provide a fractional width calculation done by
+	// eyeballing what seems about right. It probably makes sense to move
+	// the widths to the map of pens in future.
 
 	layerPens, ok = lpc[strconv.Itoa(layerNo)]
 	if !ok {
@@ -82,6 +86,21 @@ func (lpc LayerPenConfigs) GetPen(layerNo int, penName, penWidth string) (*PenCo
 			return &pen, true
 		}
 	}
+
+	// if no pen was found, try with a default pen
+	if penWidth == "standard" {
+		return &pc, false
+	}
+	for _, pen := range layerPens {
+		if pen.Pen == penName && pen.Weight == "standard" {
+			copiedPen := pen
+			copiedPen.GetWidth(penWidth)
+			// add pen to configuration to avoid lookup
+			layerPens = append(layerPens, copiedPen)
+			return &copiedPen, true
+		}
+	}
+
 	return &pc, false
 }
 
@@ -123,6 +142,27 @@ func (pc *PenConfig) UnmarshalYAML(value *yaml.Node) (err error) {
 // GetColour returns the penconfig color.RGBA colour
 func (pc *PenConfig) GetColour() color.RGBA {
 	return pc.Colour.Colour
+}
+
+// NarrowWidth returns the narrow version of the current pen weight
+func (pc *PenConfig) NarrowWidth() float64 {
+	return pc.Width * 1.875 / 2.000
+}
+
+// BroadWidth returns the narrow version of the current pen weight
+func (pc *PenConfig) BroadWidth() float64 {
+	return pc.Width * 2.125 / 2.000
+}
+
+// GetWidth returns the stroke width for the stated pen
+func (pc *PenConfig) GetWidth(w string) float64 {
+	switch w {
+	case "narrow":
+		return pc.NarrowWidth()
+	case "broad":
+		return pc.BroadWidth()
+	}
+	return 0.0
 }
 
 // LoadYaml reads bytes into a PenConfig structure
