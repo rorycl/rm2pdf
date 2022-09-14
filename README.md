@@ -1,6 +1,6 @@
 # rm2pdf
 
-version 0.1.1 : 12 September 2022
+version 0.1.2 : 14 September 2022
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
@@ -9,19 +9,46 @@ per-layer colours for selected pens.
 
 12 September 2022
 
-This 0.1.1 release allows the provision of input paths with suffixes,
-useful if you've copied a `.content` or `.metadata` filepath from a grep
-command, or similar.
+This 0.1.2 supports the provision of a custom pen configuration file. An
+example config file `config_example.yaml` is provided.
 
 Previously:
+* 0.1.1 : allow input paths with suffixes (such as `.content`)
 * 0.1.0 : added support for landscape mode files.
 * 0.0.3 : support for pages inserted while annotating a PDF.
 
 ## Examples
 
-
 ```
-rm2pdf -h
+./rm2pdf -h
+
+Usage:
+  rm2pdf InputPath OutputFile
+
+rm2pdf version 0.1.2
+
+...
+
+rm2pdf [-v] [-c red] [-c green] [-c ...]  InputPath OutputFile
+
+Application Options:
+  -v, --verbose     show verbose output
+                    this presently does not do much
+  -s, --settings=   path to customised pen settings file
+  -t, --template=   path to a single page A4 template to use when no UUID.pdf exists
+                    useful for processing sketches without a backing PDF
+  -c, --colours=    colour by layer
+                    use several -c flags in series to select different colours
+                    e.g. -c red -c blue -c green for layers 1, 2 and 3.
+                    See golang.org/x/image/colornames for the colours that can be used
+
+Help Options:
+  -h, --help        Show this help message
+
+Arguments:
+  InputPath:        input path and uuid, optionally ending in '.pdf'
+  OutputFile:       output pdf file to write to
+
 ```
 
 Invocation examples for annotated PDFs using the test files in `testfiles`:
