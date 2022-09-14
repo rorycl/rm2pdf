@@ -134,13 +134,16 @@ func (r *RMFileInfo) registerInsertedPages() {
 // 2      | 1       | no       | annotated.pdf |
 //
 // This function returns 0-indexed pdf pages
-func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate bool, reader io.Reader) {
+//
+// Returning an io.ReadSeeker from an fs.File is described by Ian Lance
+// Taylor at https://github.com/golang/go/issues/44175#issuecomment-775545730
+func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate bool, reader io.ReadSeeker) {
 	pageNo = r.thisPageNo
 	r.thisPageNo++
 
-	tplFH := func() io.Reader {
+	tplFH := func() io.ReadSeeker {
 		if r.useEmbeddedTemplate {
-			return r.EmbeddedTemplateFH
+			return r.EmbeddedTemplateFH.(io.ReadSeeker)
 		}
 		return r.RelPDFTemplatePathFH
 	}()
