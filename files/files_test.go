@@ -8,6 +8,8 @@ package files
 
 import (
 	"io"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -86,6 +88,31 @@ func TestFilesXochitlWithPDF(t *testing.T) {
 	}
 	if rmf.Pages[1].LayerNames[1] != expected.Pages[1].LayerNames[1] {
 		t.Error("Page two second layer names not the same")
+	}
+
+	// https://stackoverflow.com/a/29339052
+	redirStdOut := func(log string) string {
+		oldStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		// debug!
+		rmf.Debug(log)
+		w.Close()
+		s, _ := ioutil.ReadAll(r)
+		r.Close()
+		os.Stdout = oldStdout
+		return string(s)
+	}
+
+	rmf.Debugging = false
+	s := redirStdOut("hi")
+	if s != "" {
+		t.Error("debug should be nil")
+	}
+	rmf.Debugging = true
+	s = redirStdOut("hi")
+	if s != "hi\n" {
+		t.Errorf("debug got %s not %s", s, "hi")
 	}
 
 }

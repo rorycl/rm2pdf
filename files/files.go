@@ -137,7 +137,7 @@ func (r *RMFileInfo) registerInsertedPages() {
 //
 // Returning an io.ReadSeeker from an fs.File is described by Ian Lance
 // Taylor at https://github.com/golang/go/issues/44175#issuecomment-775545730
-func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate bool, reader io.ReadSeeker) {
+func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate bool, reader *io.ReadSeeker) {
 	pageNo = r.thisPageNo
 	r.thisPageNo++
 
@@ -152,7 +152,7 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 	if r.RelPDFPath == "" {
 		pdfPageNo = 0
 		isTemplate = true
-		reader = tplFH
+		reader = &tplFH
 		return
 	}
 
@@ -164,12 +164,15 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 		pdfPageNo = 0
 		inserted = true
 		isTemplate = true
-		reader = tplFH
+		reader = &tplFH
 		return
 	}
 
 	// remaining target is the annotated file
-	reader = r.RelPDFPathFH
+	pR := func() io.ReadSeeker {
+		return r.RelPDFPathFH
+	}()
+	reader = &pR
 
 	// if the annotated pdf has inserted pages, calculate the offset of
 	// the original pdf to use
