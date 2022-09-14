@@ -144,37 +144,39 @@ func (pc *PenConfig) GetColour() color.RGBA {
 	return pc.Colour.Colour
 }
 
-// NarrowWidth returns the narrow version of the current pen weight
-func (pc *PenConfig) NarrowWidth() float64 {
-	return pc.Width * 1.875 / 2.000
-}
-
-// BroadWidth returns the narrow version of the current pen weight
-func (pc *PenConfig) BroadWidth() float64 {
-	return pc.Width * 2.125 / 2.000
-}
-
-// GetWidth returns the stroke width for the stated pen
+// GetWidth returns the stroke width for the stated pen as a proportion
+// of the current pen width
 func (pc *PenConfig) GetWidth(w string) float64 {
+
+	width := func(name string) float64 {
+		switch name {
+		case "narrow":
+			return 1.875
+		case "broad":
+			return 2.125
+		}
+		return 2.000
+	}
+
 	switch w {
 	case "narrow":
-		return pc.NarrowWidth()
+		return width("narrow") / width(pc.Weight) * pc.Width
 	case "broad":
-		return pc.BroadWidth()
+		return width("broad") / width(pc.Weight) * pc.Width
 	}
-	return 0.0
+	return width("standard") / width(pc.Weight) * pc.Width
 }
 
 // LoadYaml reads bytes into a PenConfig structure
-func LoadYaml(yamlByte []byte) (*LayerPenConfigs, error) {
+func LoadYaml(yamlByte []byte) (LayerPenConfigs, error) {
 
 	var lpc LayerPenConfigs
 	err := yaml.Unmarshal(yamlByte, &lpc)
 	if err != nil {
-		return &lpc, err
+		return lpc, err
 	}
 	err = lpc.check()
-	return &lpc, err
+	return lpc, err
 }
 
 // check checks the validity of the configuration file
@@ -239,7 +241,7 @@ func (lpc LayerPenConfigs) check() error {
 }
 
 // NewPenConfigFromFile loads a pen configuration yaml file
-func NewPenConfigFromFile(filePath string) (lpc *LayerPenConfigs, err error) {
+func NewPenConfigFromFile(filePath string) (lpc LayerPenConfigs, err error) {
 
 	contents, err := os.ReadFile(filePath)
 	if err != nil {
