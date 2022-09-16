@@ -11,7 +11,6 @@ package rmpdf
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
@@ -81,7 +80,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	layerID := layerIDFromRegister("Background", pdf)
 	pdf.BeginLayer(layerID)
 
-	rmf.Debug(fmt.Sprintf("%s rm page %d pdf page %d", rmf.RelPDFPath, rmPageNo+1, pdfPageNo+1))
+	rmf.Debug(fmt.Sprintf("%s rm page %d pdf page %d", rmf.IdentifyPDF(useTemplate), rmPageNo+1, pdfPageNo+1))
 
 	// if an annotated pdf is provided, use the next page from that
 	// if using the A4 template, recycle page use, based on output from
@@ -103,15 +102,8 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 		rmf.Debug(fmt.Sprintf("no rm file for page %d ...skipping", rmPageNo+1))
 		return nil
 	}
-
-	rmf.Debug(fmt.Sprintf("rmfile %s", rmPage.RelRMPath))
-	rmF, err := os.Open(rmPage.RelRMPath)
-	if err != nil {
-		return err
-	}
-	defer rmF.Close()
-
-	rm, err := rmparse.RMParse(rmF)
+	rmf.Debug(fmt.Sprintf("rmfile %s", rmPage.RMFilePath()))
+	rm, err := rmparse.RMParse(rmPage.RMFile())
 	if err != nil {
 		return err
 	}

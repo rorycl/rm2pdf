@@ -8,42 +8,29 @@ RCL December 2019
 package files
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
-
-//go:embed "A4.pdf"
-var embeddedA4File embed.FS
 
 // RMFileInfo is a struct defining the collected metadata about a PDF
 // from the reMarkable file collection
 type RMFileInfo struct {
-	RelPDFPath           string // full relative path to PDF
-	RelPDFPathFH         *os.File
-	RelPDFTemplatePath   string // full relative path to PDF template
-	RelPDFTemplatePathFH *os.File
-	EmbeddedTemplateFH   fs.File // embedded template
-	useEmbeddedTemplate  bool
-	Identifier           string // the uuid used to identify the PDF file
-	Version              int    // version from metadata
-	VisibleName          string // visibleName from metadata (used in reMarkable interface)
-	LastModified         time.Time
-	OriginalPageCount    int
-	PageCount            int
-	Pages                []RMPage
-	Orientation          string
-	RedirectionPageMap   []int // page insertion info
+	*RmFS                     // embedded rm filesystem
+	Version            int    // version from metadata
+	VisibleName        string // visibleName from metadata (used in reMarkable interface)
+	LastModified       time.Time
+	OriginalPageCount  int
+	PageCount          int
+	Pages              []RMPage
+	Orientation        string
+	RedirectionPageMap []int // page insertion info
 	// show inserted pages
 	insertedPages
 	// page number used for processing
@@ -56,28 +43,6 @@ func (r *RMFileInfo) Debug(d string) {
 	if r.Debugging {
 		fmt.Println(d)
 	}
-}
-
-// loadFiles loads the PDF file filehandles
-func (r *RMFileInfo) loadFiles() error {
-	var err error
-	if r.RelPDFPath != "" {
-		r.RelPDFPathFH, err = os.Open(r.RelPDFPath)
-		if err != nil {
-			return fmt.Errorf("could not open pdf file %s", err)
-		}
-	}
-	if r.RelPDFTemplatePath != "" {
-		r.RelPDFTemplatePathFH, err = os.Open(r.RelPDFTemplatePath)
-		if err != nil {
-			return fmt.Errorf("could not open template file %s", err)
-		}
-	}
-	r.EmbeddedTemplateFH, err = embeddedA4File.Open("A4.pdf")
-	if err != nil {
-		return fmt.Errorf("could not open embedded template file %s", err)
-	}
-	return nil
 }
 
 // InsertedPages is a public export of the embedded insertedPages human
@@ -141,18 +106,11 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 	pageNo = r.thisPageNo
 	r.thisPageNo++
 
-	tplFH := func() io.ReadSeeker {
-		if r.useEmbeddedTemplate {
-			return r.EmbeddedTemplateFH.(io.ReadSeeker)
-		}
-		return r.RelPDFTemplatePathFH
-	}()
-
 	// if there is only a template, always return the first page
-	if r.RelPDFPath == "" {
+	if r.pdfPath == "" {
 		pdfPageNo = 0
 		isTemplate = true
-		reader = &tplFH
+		reader = &r.templateReader
 		return
 	}
 
@@ -164,15 +122,12 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 		pdfPageNo = 0
 		inserted = true
 		isTemplate = true
-		reader = &tplFH
+		reader = &r.templateReader
 		return
 	}
 
 	// remaining target is the annotated file
-	pR := func() io.ReadSeeker {
-		return r.RelPDFPathFH
-	}()
-	reader = &pR
+	reader = &r.pdfReader
 
 	// if the annotated pdf has inserted pages, calculate the offset of
 	// the original pdf to use
@@ -197,11 +152,21 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 // file records page UUIDs for each page of the original PDF, .rm and
 // related file are only made for those pages which have marks
 type RMPage struct {
-	PageNo     int
-	Identifier string   // the uuid used to identify the RM file
-	RelRMPath  string   // full relative path to the .rm file
-	Exists     bool     // file exists on disk
-	LayerNames []string // layer names by implicit index
+	*rmFileDesc // the rm file descriptor
+	PageNo      int
+	Identifier  string   // the uuid used to identify the RM file
+	Exists      bool     // file exists on disk
+	LayerNames  []string // layer names by implicit index
+}
+
+// RMFile returns the fs.File pointing to the .rm file
+func (r *RMPage) RMFile() fs.File {
+	return r.rm
+}
+
+// RMFilePath returns the .rm file path
+func (r *RMPage) RMFilePath() string {
+	return r.rmPath
 }
 
 // Per-rm file json .metadata file decoding (layers.name)
@@ -268,9 +233,11 @@ func checkFileExists(f string) error {
 }
 
 // RMFiler collects information from the reMarkable files associated
-// with the uuid of interest. Either a pdf at <path/uuid.pdf> is
-// expected, or a single A4 page template. If a template is not
-// explictly provided an embedded A4 template is used.
+// with the uuid of interest.
+//
+// Either a pdf at <path/uuid.pdf> is expected, or a single A4 page
+// template. If a template is not explictly provided an embedded A4
+// template is used. This is managed by fs.go
 //
 // The uuid (identified by its filepath plus <uuid>), is used to collect
 // information from the .metadata and .content files. It then collects
@@ -279,64 +246,63 @@ func checkFileExists(f string) error {
 func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 
 	rm := RMFileInfo{}
+	var err error
 
-	// trim suffix, so if a suffix is provided by mistake it is ignored
-	inputpath = strings.TrimSuffix(inputpath, filepath.Ext(inputpath))
-
-	// if the inputpath has '.pdf' at the end, chop it off
-	inputpath = strings.TrimSuffix(inputpath, ".pdf")
-
-	// split path and uuid
-	dir, hUUID := filepath.Split(inputpath)
-
-	// verify uuid
-	if _, err := uuid.Parse(hUUID); err != nil {
-		return rm, fmt.Errorf("uuid '%s' is invalid", hUUID)
-	}
-	rm.Identifier = hUUID
-
-	// construct paths to .content and .metadata and check the paths exist
-	fbase := filepath.Join(dir, hUUID)
-	fmetadata := fbase + ".metadata"
-	fcontent := fbase + ".content"
-
-	// metadata only exists on xochitl files
-	if err := checkFileExists(fmetadata); err == nil {
-
-		body, err := ioutil.ReadFile(fmetadata)
+	// make a remarkable file system of files and scan the file system
+	if filepath.Ext(strings.ToLower(inputpath)) == ".zip" {
+		rm.RmFS, err = NewZipRmFS(inputpath, template)
 		if err != nil {
-			return rm, err
+			return rm, fmt.Errorf("could not init new zip fs: %s", err)
 		}
-		var p pdfMetadata
-		err = json.Unmarshal(body, &p)
+	} else {
+		// trim suffix, so if a suffix is provided by mistake it is ignored
+		inputpath = strings.TrimSuffix(inputpath, filepath.Ext(inputpath))
+		path, base := filepath.Split(inputpath)
+		if path == "" {
+			path = "."
+		}
+		rm.RmFS, err = NewDirRmFS(path, base, template)
 		if err != nil {
-			return rm, err
+			return rm, fmt.Errorf("could not init new directory fs: %s", err)
 		}
-
-		rm.Version = p.Version
-		rm.VisibleName = p.VisibleName
-		rm.LastModified = time.Time(p.LastModified)
 	}
 
-	if err := checkFileExists(fcontent); err != nil {
-		return rm, fmt.Errorf("PDF content file %s not found", fcontent)
+	// scan the filesystem for bundle files
+	err = rm.Scan()
+	if err != nil {
+		return rm, err
 	}
 
-	// read content
-	body, err := ioutil.ReadFile(fcontent)
+	// metadata
+	// load and read the metadata
+	body, err := io.ReadAll(rm.metadata)
+	if err != nil {
+		return rm, fmt.Errorf("could not read metadata file %s : %s", rm.metadataPath, err)
+	}
+
+	var p pdfMetadata
+	err = json.Unmarshal(body, &p)
+	if err != nil {
+		return rm, err
+	}
+	rm.Version = p.Version
+	rm.VisibleName = p.VisibleName
+	rm.LastModified = time.Time(p.LastModified)
+
+	// content
+	// load content into rm struct and calculate the inserted pages
+	// assume that if OriginalPageCount is 0 this is from an historic
+	// .rm file (which did not have this field) and set it to be the
+	// same as PageCount
+	body, err = io.ReadAll(rm.content)
 	if err != nil {
 		return rm, err
 	}
 	var c content
 	err = json.Unmarshal(body, &c)
 	if err != nil {
-		return rm, err
+		return rm, fmt.Errorf("could not read content file %s : %s", rm.contentPath, err)
 	}
-
-	// load content into rm struct and calculate the inserted pages
-	// assume that if OriginalPageCount is 0 this is from an historic
-	// .rm file (which did not have this field) and set it to be the
-	// same as PageCount
 	rm.Orientation = c.Orientation
 	rm.PageCount = c.PageCount
 	rm.OriginalPageCount = c.OriginalPageCount
@@ -345,82 +311,46 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	}
 	rm.RedirectionPageMap = c.RedirectionPageMap
 	rm.registerInsertedPages()
-
 	if len(c.Pages) != rm.PageCount {
 		return rm, fmt.Errorf(
 			"number of rm pages %d != json pageCount %d", len(c.Pages), rm.PageCount)
 	}
 
-	// check base pdf exists and/or template pdf file
-	if c.FileType == "pdf" {
-		rm.RelPDFPath = fbase + ".pdf"
-		if err := checkFileExists(rm.RelPDFPath); err != nil {
-			return rm, fmt.Errorf("PDF file %s not found", rm.RelPDFPath)
-		}
-	}
-	if template != "" {
-		err := checkFileExists(template)
-		if err != nil {
-			return rm, fmt.Errorf("template %s not found", template)
-		}
-		rm.RelPDFTemplatePath = template
-	}
-
-	if rm.RelPDFPath == "" && rm.RelPDFTemplatePath == "" {
-		rm.useEmbeddedTemplate = true
-	}
-
-	// load pdf file handles
-	err = rm.loadFiles()
-	if err != nil {
-		return rm, err
-	}
+	// note that template switching is done in fs.go
 
 	// extract each rm json page and construct the path to the .rm file
 	// itself
 	for i, rmj := range c.Pages {
 
-		if err := checkFileExists(filepath.Join(fbase, rmj+"-metadata.json")); err != nil {
-			// swap explicit page uuid for rmapi index-based system
-			rmj = strconv.Itoa(i)
-		}
-		rmJSONPath := filepath.Join(fbase, rmj+"-metadata.json")
-		rmPath := filepath.Join(fbase, rmj+".rm")
-		rmid := strings.Replace(filepath.Base(rmJSONPath), filepath.Ext(rmJSONPath), "", 1)
-
 		rmP := RMPage{
 			PageNo:     i,
-			Identifier: rmid,
-			RelRMPath:  rmPath,
+			Identifier: rmj,
 			Exists:     true,
 		}
 
-		err := checkFileExists(rmJSONPath)
-		if err != nil {
+		// some rm files described in the content json file don't
+		// necessarily get written to disk. If there is no file, set the
+		// page.Exists flag to false and continue processing
+		//
+		// rmfs.rmFiles map needs a path/uuid to extract the rmFileDesc
+		lkPath := filepath.Join(rm.identifier, rmj)
+		rmfd, ok := rm.rmFiles[lkPath]
+		if !ok {
 			rmP.Exists = false
-			rm.Pages = append(rm.Pages, rmP)
 			continue
 		}
+		rmP.rmFileDesc = &rmfd
 
-		err = checkFileExists(rmPath)
+		// open and read json from rm .json file
+		body, err := io.ReadAll(rmfd.metadata)
 		if err != nil {
-			rmP.Exists = false
-			rm.Pages = append(rm.Pages, rmP)
-			continue
+			return rm, fmt.Errorf("could not read metadata file %s: %s", rmfd.metadataPath, err)
 		}
-
-		body, err := ioutil.ReadFile(rmJSONPath)
-		if err != nil {
-			return rm, fmt.Errorf("could not read metadata file %s: %s", rmJSONPath, err)
-		}
-
-		// read json from rm .json file
 		var m rmMetadata
 		err = json.Unmarshal(body, &m)
 		if err != nil {
-			return rm, fmt.Errorf("could not unmarshal metadata file %s: %s", rmJSONPath, err)
+			return rm, fmt.Errorf("could not unmarshal metadata file %s: %s", rmfd.metadataPath, err)
 		}
-
 		for _, v := range m.Layers {
 			rmP.LayerNames = append(rmP.LayerNames, v.Layer)
 		}
@@ -429,6 +359,5 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 		rm.Pages = append(rm.Pages, rmP)
 
 	}
-
 	return rm, nil
 }

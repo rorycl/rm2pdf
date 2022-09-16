@@ -23,7 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
+	"io/fs"
 )
 
 // Header is an rm file header
@@ -31,7 +31,7 @@ var Header = "reMarkable .lines file, version=5         "
 
 // RMFile is the reMarkable .rm file File parser metadata base structure
 type RMFile struct {
-	File           *os.File
+	File           fs.File
 	Header         [43]byte
 	LayerNo        uint32
 	ThisLayer      uint32
@@ -95,7 +95,7 @@ var ms = MaxCoordinates{}
 // RMParse instantiates a parser by registering a file to parse and
 // initialising the header, layer count and related counters. Continue
 // parsing using the "Parse()" iterator-type function.
-func RMParse(f *os.File) (*RMFile, error) {
+func RMParse(f fs.File) (*RMFile, error) {
 
 	rm := &RMFile{}
 	rm.File = f
@@ -196,7 +196,7 @@ func (rm *RMFile) Parse() bool {
 }
 
 // HeaderParse starts parsing an .rm file, returning the header and number of layers
-func HeaderParse(f *os.File) (HeaderLayers, error) {
+func HeaderParse(f fs.File) (HeaderLayers, error) {
 
 	hl := HeaderLayers{}
 
@@ -212,7 +212,7 @@ func HeaderParse(f *os.File) (HeaderLayers, error) {
 
 // ParseLayers returns the number of paths for each layer in the .rm
 // file
-func ParseLayers(f *os.File) (Paths, error) {
+func ParseLayers(f fs.File) (Paths, error) {
 
 	pths := Paths{}
 
@@ -227,7 +227,7 @@ func ParseLayers(f *os.File) (Paths, error) {
 }
 
 // ParsePath returns the path for each path in the layer.paths
-func ParsePath(f *os.File) (Path, error) {
+func ParsePath(f fs.File) (Path, error) {
 
 	path := Path{}
 
@@ -243,7 +243,7 @@ func ParsePath(f *os.File) (Path, error) {
 }
 
 // ParseSegment returns the segment for each segment in a path
-func ParseSegment(f *os.File) (Segment, error) {
+func ParseSegment(f fs.File) (Segment, error) {
 
 	sg := Segment{}
 
