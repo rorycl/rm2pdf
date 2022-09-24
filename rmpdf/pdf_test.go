@@ -7,13 +7,15 @@ RCL January 2020
 package rmpdf
 
 import (
+	"fmt"
 	"os"
 
 	colornames "golang.org/x/image/colornames"
 
-	// "fmt"
 	"io/ioutil"
 	"testing"
+
+	"github.com/rorycl/rm2pdf/pdfutil"
 )
 
 // Test converting a PDF and associated files
@@ -156,5 +158,37 @@ all:
 	RM2PDF("../testfiles/"+testUUID, tname, template, cName, false, colours)
 	if err != nil {
 		t.Errorf("An rm2pdf error occurred: %v", err)
+	}
+}
+
+// TestConvertZip tests converting an rm file bundle from a zip file
+func TestConvertZip(t *testing.T) {
+
+	file := "../testfiles/horizontal_rmapi.zip"
+	template := ""
+
+	// make temporary file
+	tmpfile, err := ioutil.TempFile("", "example")
+	if err != nil {
+		t.Error(err)
+	}
+	tname := tmpfile.Name()
+	tname = tname + ".pdf"
+	defer os.Remove(tname)
+
+	RM2PDF(file, tname, template, "", false, []LocalColour{})
+	if err != nil {
+		t.Errorf("An rm2pdf error occurred: %v", err)
+	}
+
+	thisPDF, err := pdfutil.NewPDFFile(tname)
+	if err != nil {
+		t.Errorf("could not get pdf info %s", err)
+	}
+	if fmt.Sprint(thisPDF.Orientation) != "landscape" {
+		t.Errorf("pdf orientation not horizontal, got %s", fmt.Sprint(thisPDF.Orientation))
+	}
+	if thisPDF.Pages != 2 {
+		t.Errorf("pdf pages should be 2, got %d", thisPDF.Pages)
 	}
 }

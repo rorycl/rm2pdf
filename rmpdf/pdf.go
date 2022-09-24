@@ -97,11 +97,11 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	pdf.EndLayer()
 
 	// Initialise the .rm file parser if the .rm file exists, else return
-	rmPage := rmf.Pages[rmPageNo]
-	if !rmPage.Exists {
+	if rmPageNo > len(rmf.Pages)-1 {
 		rmf.Debug(fmt.Sprintf("no rm file for page %d ...skipping", rmPageNo+1))
 		return nil
 	}
+	rmPage := rmf.Pages[rmPageNo]
 	rmf.Debug(fmt.Sprintf("rmfile %s", rmPage.RMFilePath()))
 	rm, err := rmparse.RMParse(rmPage.RMFile())
 	if err != nil {
@@ -325,7 +325,7 @@ func RM2PDF(inputpath, outfile, template, settings string, verbose bool, colours
 	// 2      | no       | annotated.pdf | 1
 
 	// Iterate over each page in the pdf
-	for i := 0; i < len(rmfile.Pages); i++ {
+	for i := 0; i < rmfile.PageCount; i++ {
 		pageNo, pdfPageNo, inserted, isTemplate, pdfFH := rmfile.PageIterate()
 		rmfile.Debug(fmt.Sprintf(
 			"processing page %d %d inserted %t template %t",
