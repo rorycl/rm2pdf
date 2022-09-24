@@ -1,18 +1,22 @@
 # rm2pdf
 
-version 0.1.4 : 21 September 2022
+version 0.1.4 : 24 September 2022
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
 
 ## Update
 
-15 September 2022
+24 September 2022
+
+Add rmapi zip file support
 
 This 0.1.4 release adds support for rmapi zip files. As directory and
 zip file support is through go's `fs.FS` (hierarchical file system)
 module, further ways of mounting filesystems, such as through ssh,
 should be possible.
+
+`rm2pdf path_to.zip output.pdf`
 
 Note that go 1.16+ is needed for `rm2pdf` due to the use of embedded
 files, added in v0.1.3.
@@ -61,16 +65,27 @@ Arguments:
 Invocation examples for annotated PDFs using the test files in `testfiles`:
 
 ```
-rm2pdf testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf /tmp/output.pdf
-rm2pdf -c orange -c olivegreen testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf /tmp/output2.pdf
+rm2pdf testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf output.pdf
+
+rm2pdf -c orange -c olivegreen \
+       testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3.pdf output2.pdf
 ```
 
 Invocation examples for reMarkable notebooks using the test files in `testfiles`
 and the A4 template in `templates`.
 
 ```
-rm2pdf -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/output3.pdf
-rm2pdf -c blue -c red -t templates/A4.pdf testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 /tmp/output4.pdf
+rm2pdf -c blue -c red -t templates/A4.pdf \
+       testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 output4.pdf
+
+```
+
+The embedded template is used where one is not provided, so the above command is
+the same as
+
+```
+rm2pdf -c blue -c red \
+       testfiles/d34df12d-e72b-4939-a791-5b34b3a810e7 output4.pdf
 ```
 
 ## Details
@@ -89,12 +104,11 @@ Output PDFs are layered with the background PDF forming a "Background" layer and
 subsequent layers using the layer names created on the tablet. The layers can be
 turned on and off using tools provided by PDF readers such as Evince.
 
-The pen widths and opacities are estimates and could be improved. The .rm file
-pressure and tilt information is not presently used. 
-
-Colours, base width and opacity are set for each pen are set in rmpdf/stroke.go.
-Those pens with ColourOverride true will have their colour overridden by the
-command-line options.
+The pen widths and opacities provided by default are estimates. Colours, base
+width and opacity are set for each pen are set in rmpdf/stroke.go. Those pens
+with ColourOverride true will have their colour overridden by the command-line
+options or pen configuration yaml file. Note that at present the .rm file
+pressure and tilt information are not presently used. 
 
 Some PDF files, notably those created by Microsoft Word, cannot be imported
 reliably, causing the programme to panic. Reprocessing problem PDFs with the
