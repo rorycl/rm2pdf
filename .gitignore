@@ -1,0 +1,13 @@
+# rm2pdf gitignore
+.DS_Store
+*.swp
+*.swo
+
+# ctags
+tags
+
+# local version of config
+config.yaml
+
+# binary
+rm2pdf
