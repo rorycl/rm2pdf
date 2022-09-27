@@ -192,3 +192,39 @@ func TestConvertZip(t *testing.T) {
 		t.Errorf("pdf pages should be 2, got %d", thisPDF.Pages)
 	}
 }
+
+// TestConvertZipNoMetadata tests converting an rm zip file bundle from
+// before 2021 which holds no metadata. See
+// https://github.com/rorycl/rm2pdf/issues/9. Thanks to
+// https://github.com/qwert2003 for the bug report.
+func TestConvertZipNoMetadata(t *testing.T) {
+
+	file := "../testfiles/no-metadata.zip"
+	template := ""
+
+	// make temporary file
+	tmpfile, err := ioutil.TempFile("", "example")
+	if err != nil {
+		t.Error(err)
+	}
+	tname := tmpfile.Name()
+	tname = tname + ".pdf"
+	// defer os.Remove(tname)
+
+	fmt.Printf(tname)
+	RM2PDF(file, tname, template, "", true, []LocalColour{})
+	if err != nil {
+		t.Errorf("An rm2pdf error occurred: %v", err)
+	}
+
+	thisPDF, err := pdfutil.NewPDFFile(tname)
+	if err != nil {
+		t.Fatalf("could not get pdf info %s", err)
+	}
+	if fmt.Sprint(thisPDF.Orientation) != "portrait" {
+		t.Errorf("pdf orientation not portrait , got %s", fmt.Sprint(thisPDF.Orientation))
+	}
+	if thisPDF.Pages != 1 {
+		t.Errorf("pdf pages should be 1, got %d", thisPDF.Pages)
+	}
+}
