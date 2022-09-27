@@ -188,6 +188,27 @@ func (rf *RmFS) IdentifyPDF(isTpl bool) string {
 	return rf.pdfPath
 }
 
+// Check checks if the Scan has collected some files
+func (rf *RmFS) Check() error {
+	if rf.fsPath == "" {
+		return errors.New("no rmfs fsPath found")
+	}
+	if rf.identifier == "" {
+		return errors.New("no rmfs identifier found")
+	}
+	// metadata is optional
+	if rf.contentPath == "" {
+		return errors.New("no rmfs content file found")
+	}
+	if rf.template == nil {
+		return errors.New("no rmfs template (embedded or provided) found")
+	}
+	if rf.pdfPath == "" && len(rf.rmFiles) == 0 {
+		return errors.New("no rmfs pdf found and no rm mark files found")
+	}
+	return nil
+}
+
 // pdfReadSeeker makes the PDF an io.ReadSeeker. Underlying the fs.File,
 // an os.File supports seeking, but files from a zip do not, so detect
 // that and return a bytes.NewReader if necessary
@@ -403,5 +424,11 @@ func (rf *RmFS) Scan() error {
 		return nil
 	})
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	// check the expected content has been found
+	return rf.Check()
+
 }
