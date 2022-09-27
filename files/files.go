@@ -9,6 +9,7 @@ package files
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -274,26 +275,34 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	}
 
 	// metadata
-	// load and read the metadata
-	body, err := io.ReadAll(rm.metadata)
-	if err != nil {
-		return rm, fmt.Errorf("could not read metadata file %s : %s", rm.metadataPath, err)
-	}
+	// load and read the metadata if the metadata file exists (which it
+	// may not do in older, per 2021 rm bundles; see
+	// https://github.com/rorycl/rm2pdf/issues/9)
+	var body []byte
+	if rm.metadata != nil {
+		body, err = io.ReadAll(rm.metadata)
+		if err != nil {
+			return rm, fmt.Errorf("could not read metadata file %s : %s", rm.metadataPath, err)
+		}
 
-	var p pdfMetadata
-	err = json.Unmarshal(body, &p)
-	if err != nil {
-		return rm, err
+		var p pdfMetadata
+		err = json.Unmarshal(body, &p)
+		if err != nil {
+			return rm, fmt.Errorf("could not unmarshal %s: %s", rm.metadataPath, err)
+		}
+		rm.Version = p.Version
+		rm.VisibleName = p.VisibleName
+		rm.LastModified = time.Time(p.LastModified)
 	}
-	rm.Version = p.Version
-	rm.VisibleName = p.VisibleName
-	rm.LastModified = time.Time(p.LastModified)
 
 	// content
 	// load content into rm struct and calculate the inserted pages
 	// assume that if OriginalPageCount is 0 this is from an historic
 	// .rm file (which did not have this field) and set it to be the
 	// same as PageCount
+	if rm.content == nil {
+		return rm, errors.New("content file does not exist")
+	}
 	body, err = io.ReadAll(rm.content)
 	if err != nil {
 		return rm, err
@@ -301,7 +310,7 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	var c content
 	err = json.Unmarshal(body, &c)
 	if err != nil {
-		return rm, fmt.Errorf("could not read content file %s : %s", rm.contentPath, err)
+		return rm, fmt.Errorf("could not unmarshal content file %s : %s", rm.contentPath, err)
 	}
 	rm.Orientation = c.Orientation
 	rm.PageCount = c.PageCount
@@ -330,11 +339,20 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 
 		// some rm files described in the content json file don't
 		// necessarily get written to disk. If there is no file, set the
-		// page.Exists flag to false and continue processing
+		// page.Exists flag to false and continue processing.
 		//
 		// rmfs.rmFiles map needs a path/uuid to extract the rmFileDesc
-		lkPath := filepath.Join(rm.identifier, rmj)
-		rmfd, ok := rm.rmFiles[lkPath]
+		// note, however, that some older pre-2021 rmapi zip files use
+		// 0-page indexing instead of using uuids for the rm files.
+		ok := false
+		var rmfd rmFileDesc
+		for _, p := range []string{rmj, strconv.Itoa(i)} {
+			lkPath := filepath.Join(rm.identifier, p)
+			rmfd, ok = rm.rmFiles[lkPath]
+			if ok {
+				break
+			}
+		}
 		if !ok {
 			rmP.Exists = false
 			continue

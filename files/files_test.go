@@ -7,6 +7,7 @@ RCL January 2020
 package files
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -350,5 +351,38 @@ func TestExtensionIgnored(t *testing.T) {
 	_, err := RMFiler("../testfiles/"+testUUID, template)
 	if err != nil {
 		t.Errorf("Could not open file %v", err)
+	}
+}
+
+// TestZipWithNoMetadata tests a zip file with no metadata
+// note that this older rmapi zip format uses 0-indexed page numbers
+//
+// ../testfiles/no-metadata.zip
+// ddae88d1-7514-43b6-b7de-dcdd18eeb69a.content
+// ddae88d1-7514-43b6-b7de-dcdd18eeb69a.pagedata
+// ddae88d1-7514-43b6-b7de-dcdd18eeb69a/0-metadata.json
+// ddae88d1-7514-43b6-b7de-dcdd18eeb69a/0.rm
+//
+// in comparison, see ../testfiles/horizontal_rmapi.zip
+// e724bba2-266f-434d-aaf2-935d2b405aee.content
+// e724bba2-266f-434d-aaf2-935d2b405aee.metadata
+// e724bba2-266f-434d-aaf2-935d2b405aee.pagedata
+// e724bba2-266f-434d-aaf2-935d2b405aee.pdf
+// e724bba2-266f-434d-aaf2-935d2b405aee/1a9ef8e1-8009-4c84-bbe8-ba2885a137e6-metadata.json
+// e724bba2-266f-434d-aaf2-935d2b405aee/1a9ef8e1-8009-4c84-bbe8-ba2885a137e6.rm
+func TestZipWithNoMetadata(t *testing.T) {
+
+	template := ""
+	rmf, err := RMFiler("../testfiles/no-metadata.zip", template)
+	if err != nil {
+		t.Errorf("Could not open file %v", err)
+	}
+
+	for i := 0; i < rmf.PageCount; i++ {
+		pageNo, pdfPageNo, inserted, isTemplate, _ := rmf.PageIterate()
+		fmt.Printf(
+			"pageno %d pdfpageno %d inserted %t istpl %t\n",
+			pageNo, pdfPageNo, inserted, isTemplate,
+		)
 	}
 }
