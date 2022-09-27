@@ -1,20 +1,19 @@
 # rm2pdf
 
-version 0.1.4 : 24 September 2022
+version 0.1.5 : 27 September 2022
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
 
 ## Update
 
-24 September 2022
+Support older rmapi zip files and file bundles
 
-Add rmapi zip file support
-
-This 0.1.4 release adds support for rmapi zip files. As directory and
-zip file support is through go's `fs.FS` (hierarchical file system)
-module, further ways of mounting filesystems, such as through ssh,
-should be possible.
+Fix for [issue 9](https://github.com/rorycl/rm2pdf/issues/9), to skip
+missing bundle metadata files for older reMarkable bundles, and support
+0-indexed (rather than uuid-indexed) .rm files for older rmapi zip
+files. Thanks to [qwert2003](https://github.com/qwert2003) for the
+report and invaluable help.
 
 `rm2pdf path_to.zip output.pdf`
 
@@ -22,6 +21,7 @@ Note that go 1.16+ is needed for `rm2pdf` due to the use of embedded
 files, added in v0.1.3.
 
 Recent releases:
+* 0.1.4 : add support for rmapi zip files
 * 0.1.3 : add embedded A4 template
 * 0.1.2 : support custom pen configuration, see `config_example.yaml`.
 * 0.1.1 : allow input paths with suffixes (such as `.content`).
