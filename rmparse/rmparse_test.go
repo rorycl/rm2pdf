@@ -16,7 +16,7 @@ func Last(i []Segment) Segment {
 	return i[len(i)-1]
 }
 
-func TestRMParse(t *testing.T) {
+func TestRMParseA(t *testing.T) {
 
 	filer, err := os.Open("../testfiles/cc8313bb-5fab-4ab5-af39-46e6d4160df3/da7f9a41-c2b2-4cbc-9c1b-5a20b5d54224.rm")
 	if err != nil {
@@ -46,7 +46,7 @@ func TestRMParse(t *testing.T) {
 		},
 		Segments: []Segment{
 			// only the last segment
-			Segment{
+			{
 				X:        1033.4183,
 				Y:        1429.1265,
 				Pressure: 0.33935595,
@@ -165,4 +165,20 @@ func TestRMParseEmptyLayers(t *testing.T) {
 		t.Error("The layered rm file could not be parsed")
 	}
 
+}
+
+// TestRMParseV6RMFile tests for a remarkable version 3 file
+func TestRMParseV6RMFile(t *testing.T) {
+
+	filer, err := os.Open("../testfiles/version6.rm")
+	if err != nil {
+		t.Errorf("Could not open version6 rm file %v", err)
+	}
+	defer filer.Close()
+
+	_, err = RMParse(filer)
+	t.Logf("error for v6 rm file: %s", err)
+	if err == nil {
+		t.Errorf("expected error for v6 rm file")
+	}
 }

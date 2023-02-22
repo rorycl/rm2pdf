@@ -109,8 +109,9 @@ func RMParse(f fs.File) (*RMFile, error) {
 	rm.LayerNo = headerLayers.Layers
 
 	// last byte is 0-terminated, chop it off
-	if string(rm.Header[:len(rm.Header)-1]) != Header {
-		return nil, fmt.Errorf("Header does not match %s", Header)
+	h := string(rm.Header[:len(rm.Header)-1])
+	if h != Header {
+		return nil, fmt.Errorf("Header %s does not match %s", h, Header)
 	}
 
 	if rm.LayerNo < 1 {
