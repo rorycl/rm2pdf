@@ -1,32 +1,34 @@
 # rm2pdf
 
-version 0.1.5 : 27 September 2022
+version 0.1.6 : 22 February 2023
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
 
 ## Update
 
-Support older rmapi zip files and file bundles
+`rm2pdf` does not support the new reMarkable v3 software format files,
+which produces `.rm` version 6 files.
 
-Fix for [issue 9](https://github.com/rorycl/rm2pdf/issues/9), to skip
-missing bundle metadata files for older reMarkable bundles, and support
-0-indexed (rather than uuid-indexed) .rm files for older rmapi zip
-files. Thanks to [qwert2003](https://github.com/qwert2003) for the
-report and invaluable help.
+This version 0.1.6 should detect the attempted processing of the new
+format files.
 
-`rm2pdf path_to.zip output.pdf`
+Support for the the new `content` metadata file format for reMarkable
+tablets using version 3 software is included for [issue
+11](https://github.com/rorycl/rm2pdf/issues/11), however the underlying
+issue is the new version 6 rm files.
 
-Note that go 1.16+ is needed for `rm2pdf` due to the use of embedded
-files, added in v0.1.3.
+The status of the community work on version 6 files is set out
+[here](https://www.reddit.com/r/RemarkableTablet/comments/10hxe3j/updates_regarding_reverse_engineering_remarkable/).
 
 Recent releases:
+* 0.1.5 : fix for missing metadata in bundles and older rmapi zip files
 * 0.1.4 : add support for rmapi zip files
-* 0.1.3 : add embedded A4 template
-* 0.1.2 : support custom pen configuration, see `config_example.yaml`.
-* 0.1.1 : allow input paths with suffixes (such as `.content`).
-* 0.1.0 : added support for landscape mode files.
-* 0.0.3 : support for pages inserted while annotating a PDF.
+* 0.1.3 : add embedded A4 template (needs go 1.16+)
+* 0.1.2 : support custom pen configuration, see `config_example.yaml`
+* 0.1.1 : allow input paths with suffixes (such as `.content`)
+* 0.1.0 : added support for landscape mode files
+* 0.0.3 : support for pages inserted while annotating a PDF
 
 ## Examples
 
@@ -36,7 +38,7 @@ Recent releases:
 Usage:
   rm2pdf InputPath OutputFile
 
-rm2pdf version 0.1.4
+rm2pdf version 0.1.6
 
 ...
 
