@@ -203,8 +203,8 @@ func (rf *RmFS) Check() error {
 	if rf.template == nil {
 		return errors.New("no rmfs template (embedded or provided) found")
 	}
-	if rf.pdfPath == "" && len(rf.rmFiles) == 0 {
-		return errors.New("no rmfs pdf found and no rm mark files found")
+	if len(rf.rmFiles) == 0 {
+		return errors.New("no .rm mark files found")
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func (rf *RmFS) pdfReadSeeker() error {
 		ok  bool
 	)
 	if rf.pdf == nil {
-		errors.New("pdf file has no content, cannot make readseeker")
+		return errors.New("pdf file has no content, cannot make readseeker")
 	}
 	if rf.pdfReader, ok = rf.pdf.(io.ReadSeeker); ok {
 		return nil
@@ -229,7 +229,7 @@ func (rf *RmFS) pdfReadSeeker() error {
 
 	rf.pdfBytes, err = io.ReadAll(rf.pdf)
 	if err != nil {
-		fmt.Errorf("error reading pdf file, cannot make readseeker bytes: %w", err)
+		return fmt.Errorf("error reading pdf file, cannot make readseeker bytes: %w", err)
 	}
 	rf.pdfReader = bytes.NewReader(rf.pdfBytes)
 	return nil
@@ -244,7 +244,7 @@ func (rf *RmFS) templateReadSeeker() error {
 		ok  bool
 	)
 	if rf.template == nil {
-		errors.New("template file has no content, cannot make readseeker")
+		return errors.New("template file has no content, cannot make readseeker")
 	}
 	if rf.templateReader, ok = rf.template.(io.ReadSeeker); ok {
 		return nil
@@ -255,7 +255,7 @@ func (rf *RmFS) templateReadSeeker() error {
 
 	rf.templateBytes, err = io.ReadAll(rf.template)
 	if err != nil {
-		fmt.Errorf("error reading template file, cannot make readseeker bytes: %w", err)
+		return fmt.Errorf("error reading template file, cannot make readseeker bytes: %w", err)
 	}
 	rf.templateReader = bytes.NewReader(rf.templateBytes)
 	return nil

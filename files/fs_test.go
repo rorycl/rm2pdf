@@ -82,6 +82,38 @@ func TestRmFSZipFile(t *testing.T) {
 
 }
 
+func TestRmFSZipFile2(t *testing.T) {
+
+	zipPath := "../testfiles/version3.zip" // version 3.0.4.1305 downloaded via rmapi
+	template := ""
+
+	rmFS, err := NewZipRmFS(zipPath, template)
+	if err != nil {
+		t.Fatalf("could not mount zip fs: %s", err)
+	}
+	err = rmFS.Scan()
+	if err != nil {
+		t.Fatalf("could not scan zip fs: %s", err)
+	}
+
+	expectedID := "701cdc43-04aa-410c-bc6f-3c773105a74d.pdf"
+	if rmFS.IdentifyPDF(false) != expectedID {
+		t.Errorf("identity %s != %s", rmFS.IdentifyPDF(false), expectedID)
+	}
+
+	lenFilePaths(len(rmFS.rmFiles), 2, t)
+
+	err = testReadSeek(rmFS.pdfReader)
+	if err != nil {
+		t.Error(err)
+	}
+	err = testReadSeek(rmFS.templateReader)
+	if err != nil {
+		t.Error(err)
+	}
+
+}
+
 func TestRmFSDirectory(t *testing.T) {
 
 	dirPath := "../testfiles/"
