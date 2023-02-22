@@ -151,7 +151,7 @@ func (r *RMFileInfo) PageIterate() (pageNo, pdfPageNo int, inserted, isTemplate 
 // RMPage is a struct defining metadata about each .rm file associated
 // with the PDF described in an RMFileInfo. Note that while the .content
 // file records page UUIDs for each page of the original PDF, .rm and
-// related file are only made for those pages which have marks
+// the related file are only made for those pages which have marks
 type RMPage struct {
 	*rmFileDesc // the rm file descriptor
 	PageNo      int
@@ -180,14 +180,20 @@ type rmMetadata struct {
 	Layers []rmMetadataLayer `json:"layers"`
 }
 
-// Per-pdf file .content json file decoding
+// content file per-pdf json file decoding
 type content struct {
-	FileType           string   `json:fileType`
-	Orientation        string   `json:orientation`
-	Pages              []string `json:pages`
-	RedirectionPageMap []int    `json:redirectionPageMap`
-	OriginalPageCount  int      `json:originalPageCount`
-	PageCount          int      `json:pageCount`
+	FileType      string `json:"fileType"`
+	Orientation   string `json:"orientation"`
+	PageCount     int    `json:"pageCount"`
+	FormatVersion int    `json:"formatVersion"` // version 3 remarkable software introduced FormatVersion 2
+	Pages         []string
+	CPages        struct { // added in version 3
+		Pages []struct {
+			ID string `json:"id"`
+		} `json:"pages"`
+	} `json:"cPages,omitempty"`
+	RedirectionPageMap []int `json:"redirectionPageMap"`
+	OriginalPageCount  int   `json:"originalPageCount"`
 }
 
 // Per-pdf file .metadata json file decoding: epoch time property
@@ -195,10 +201,10 @@ type epochTime time.Time
 
 // Per-pdf file .metadata json file decoding: general metadata
 type pdfMetadata struct {
-	LastModified epochTime `json:lastmodified`
-	Type         string    `json:type`
-	Version      int       `json:version`
-	VisibleName  string    `json:tpl`
+	LastModified epochTime `json:"lastmodified"`
+	Type         string    `json:"type"`
+	Version      int       `json:"version"`
+	VisibleName  string    `json:"visibleName"`
 }
 
 // Custom json decoder for unix epochs, with reference to
@@ -247,6 +253,7 @@ func checkFileExists(f string) error {
 func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 
 	rm := RMFileInfo{}
+	// rm.Debugging = true
 	var err error
 
 	// make a remarkable file system of files and scan the file system
@@ -307,11 +314,23 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	if err != nil {
 		return rm, err
 	}
+
 	var c content
 	err = json.Unmarshal(body, &c)
 	if err != nil {
 		return rm, fmt.Errorf("could not unmarshal content file %s : %s", rm.contentPath, err)
 	}
+
+	// reMarkable software 3.0x introduced content file version 2, with
+	// a different page structure off a cPages structure.
+	// range over cPage.Page and add ID to c.Pages
+	if c.FormatVersion > 0 {
+		for _, p := range c.CPages.Pages {
+			c.Pages = append(c.Pages, p.ID)
+		}
+	}
+	rm.Debug(fmt.Sprintf("content : %+v\n", c))
+
 	rm.Orientation = c.Orientation
 	rm.PageCount = c.PageCount
 	rm.OriginalPageCount = c.OriginalPageCount
@@ -321,8 +340,9 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 	rm.RedirectionPageMap = c.RedirectionPageMap
 	rm.registerInsertedPages()
 	if len(c.Pages) != rm.PageCount {
+		rm.Debug(fmt.Sprintf("content Pages != rm.PageCount\ncontent: %#v\nrm: %#v", c, rm))
 		return rm, fmt.Errorf(
-			"number of rm pages %d != json pageCount %d", len(c.Pages), rm.PageCount)
+			"json pageCount %d != number of rm pages %d", len(c.Pages), rm.PageCount)
 	}
 
 	// note that template switching is done in fs.go
@@ -349,15 +369,23 @@ func RMFiler(inputpath string, template string) (RMFileInfo, error) {
 		for _, p := range []string{rmj, strconv.Itoa(i)} {
 			lkPath := filepath.Join(rm.identifier, p)
 			rmfd, ok = rm.rmFiles[lkPath]
+			rm.Debug(fmt.Sprintf("lkPath   : %s\nrmfd   : \n%v\nfound %t\nrmfiles: \n%v\n", lkPath, rmfd, ok, rm.rmFiles))
 			if ok {
 				break
 			}
 		}
 		if !ok {
 			rmP.Exists = false
+			rm.Debug(fmt.Sprintf("rm file for pageno %d not found", i))
 			continue
 		}
+
 		rmP.rmFileDesc = &rmfd
+
+		// todo: move this
+		if rmfd.metadata == nil {
+			return rm, errors.New("software version 3 not supported -- no rm metadata file found")
+		}
 
 		// open and read json from rm .json file
 		body, err := io.ReadAll(rmfd.metadata)

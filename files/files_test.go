@@ -7,9 +7,9 @@ RCL January 2020
 package files
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -380,9 +380,40 @@ func TestZipWithNoMetadata(t *testing.T) {
 
 	for i := 0; i < rmf.PageCount; i++ {
 		pageNo, pdfPageNo, inserted, isTemplate, _ := rmf.PageIterate()
-		fmt.Printf(
+		t.Logf(
 			"pageno %d pdfpageno %d inserted %t istpl %t\n",
 			pageNo, pdfPageNo, inserted, isTemplate,
 		)
+	}
+}
+
+// TestZipVersion3 tests a remarkable v3.0.4 zip file made by rmapi
+//
+// ../testfiles/version3.zip
+// 701cdc43-04aa-410c-bc6f-3c773105a74d
+// 701cdc43-04aa-410c-bc6f-3c773105a74d.content
+// 701cdc43-04aa-410c-bc6f-3c773105a74d.metadata
+// 701cdc43-04aa-410c-bc6f-3c773105a74d.pdf
+func TestZipV3(t *testing.T) {
+
+	template := ""
+	rmf, err := RMFiler("../testfiles/version3.zip", template)
+
+	expected := "software version 3 not supported -- no rm metadata file found"
+	if !strings.Contains(err.Error(), expected) {
+		t.Errorf("v3 file should error with %s, not %v", expected, err)
+	}
+
+	pages := 0
+	for i := 0; i < rmf.PageCount; i++ {
+		pages++
+		pageNo, pdfPageNo, inserted, isTemplate, _ := rmf.PageIterate()
+		t.Logf(
+			"pageno %d pdfpageno %d inserted %t istpl %t\n",
+			pageNo, pdfPageNo, inserted, isTemplate,
+		)
+	}
+	if pages != 2 {
+		t.Errorf("page no %d != 2", pages)
 	}
 }
