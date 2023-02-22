@@ -24,6 +24,9 @@ rm2pdf version %s
 Render layered PDF files from reMarkable tablet file bundles with
 customisable pen widths and colours.
 
+rm2pdf does not currently support remarkable software version 3 .rm
+'lines' files.
+
 Note that PDF files from sources such as Microsoft Word do not always
 work well. It can help to rewrite them using the pdftk tool, e.g. by
 doing
