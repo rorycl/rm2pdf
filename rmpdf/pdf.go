@@ -126,7 +126,7 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 	rmf.Debug(fmt.Sprintf("Beginning layer %d", layerNo))
 
 	// start parsing; note that pdflayers are dealt with sequentially
-	// rm.Parse works on a per-path basis, implicity therefore on a
+	// rm.Parse works on a per-path basis, implicitly therefore on a
 	// per-pen basis
 	pathNum := 0
 	for rm.Parse() {
@@ -177,7 +177,6 @@ func constructPageWithLayers(rmf files.RMFileInfo, rmPageNo, pdfPageNo int, useT
 		// override if set
 		//
 		// pdf.SetFillSpotColor("White", 100) // 0% tint
-		ok = false
 		var layerCustomColour LocalColour
 
 		layerCustomColour, ok = pageLayerColours[layerNo-1]

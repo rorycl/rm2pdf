@@ -107,7 +107,7 @@ func (lpc LayerPenConfigs) GetPen(layerNo int, penName, penWidth string) (*PenCo
 // UnmarshalYAML is a custom unmarshaller
 func (pc *PenConfig) UnmarshalYAML(value *yaml.Node) (err error) {
 
-	// auxilliary unmarshal struct
+	// auxiliary unmarshal struct
 	type AuxPenConfig struct {
 		Pen     string  `yaml:"pen"`
 		Weight  string  `yaml:"weight"`

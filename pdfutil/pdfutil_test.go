@@ -63,6 +63,9 @@ func TestRotate(t *testing.T) {
 	}
 
 	pCopy, err := NewPDFFile(tName)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	pCopy.Rotate(-90)
 

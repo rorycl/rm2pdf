@@ -243,7 +243,7 @@ func checkFileExists(f string) error {
 // with the uuid of interest.
 //
 // Either a pdf at <path/uuid.pdf> is expected, or a single A4 page
-// template. If a template is not explictly provided an embedded A4
+// template. If a template is not explicitly provided an embedded A4
 // template is used. This is managed by fs.go
 //
 // The uuid (identified by its filepath plus <uuid>), is used to collect

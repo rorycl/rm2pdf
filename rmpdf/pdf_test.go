@@ -50,7 +50,7 @@ func TestConvertWithoutPDF(t *testing.T) {
 	defer os.Remove(tname)
 
 	colours := []LocalColour{
-		LocalColour{
+		{
 			Name:   "darkseagreen",
 			Colour: colornames.Darkseagreen,
 		},
@@ -74,7 +74,7 @@ func TestConvertWithInsertedPage(t *testing.T) {
 	defer os.Remove(tname)
 
 	colours := []LocalColour{
-		LocalColour{
+		{
 			Name:   "darkseagreen",
 			Colour: colornames.Darkseagreen,
 		},
@@ -102,7 +102,7 @@ func TestConvertWithLandscape(t *testing.T) {
 	defer os.Remove(tname)
 
 	colours := []LocalColour{
-		LocalColour{
+		{
 			Name:   "blue",
 			Colour: colornames.Blueviolet,
 		},

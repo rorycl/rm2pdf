@@ -21,7 +21,7 @@ import (
 // the medium-sized pen width of each pen type (the middle of three
 // values), although StdWidth is an eyeballed/very approximate value
 // which is further adjusted through StrokeSetting.Width(). In future
-// it may be better to set the widths explictly in this struct.
+// it may be better to set the widths explicitly in this struct.
 // The Alpha value is set separately using the Opacity value. The
 // ColourOverride property determines if the colour of the stroke may be
 // manually overridden by command-line options.
