@@ -1,6 +1,6 @@
 # rm2pdf
 
-version 0.1.6 : 22 February 2023
+version 0.1.7 : 26 December 2024
 
 Convert reMarkable tablet file 'bundles' to layered PDFs, with optional
 per-layer colours for selected pens.
