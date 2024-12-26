@@ -15,7 +15,7 @@ import (
 	rmpdf "github.com/rorycl/rm2pdf/rmpdf"
 )
 
-const version string = "0.1.6"
+const version string = "0.1.7"
 
 const usage = `InputPath OutputFile
 

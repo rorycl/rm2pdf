@@ -10,8 +10,8 @@ per-layer colours for selected pens.
 `rm2pdf` does not support the new reMarkable v3 software format files,
 which produces `.rm` version 6 files.
 
-This version 0.1.6 should detect the attempted processing of the new
-format files.
+Version 0.1.6 should detect the attempted processing of the new format
+files. Version 0.1.7 is a small security fix.
 
 Support for the the new `content` metadata file format for reMarkable
 tablets using version 3 software is included for [issue
@@ -38,7 +38,7 @@ Recent releases:
 Usage:
   rm2pdf InputPath OutputFile
 
-rm2pdf version 0.1.6
+rm2pdf version 0.1.7
 
 ...
 
