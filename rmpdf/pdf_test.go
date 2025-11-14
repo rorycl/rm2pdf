@@ -211,7 +211,7 @@ func TestConvertZipNoMetadata(t *testing.T) {
 	tname = tname + ".pdf"
 	// defer os.Remove(tname)
 
-	fmt.Printf(tname)
+	fmt.Println(tname)
 	RM2PDF(file, tname, template, "", true, []LocalColour{})
 	if err != nil {
 		t.Errorf("An rm2pdf error occurred: %v", err)
