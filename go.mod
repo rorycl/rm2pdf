@@ -3,6 +3,7 @@ module github.com/rorycl/rm2pdf
 go 1.26
 
 require (
+	codeberg.org/go-pdf/fpdf v0.12.0
 	github.com/go-playground/colors v1.3.1
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.6.0

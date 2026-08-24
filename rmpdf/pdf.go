@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"io"
 
+	"codeberg.org/go-pdf/fpdf/contrib/gofpdi"
 	"github.com/jung-kurt/gofpdf"
-	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
 	"github.com/rorycl/rm2pdf/files"
 	"github.com/rorycl/rm2pdf/penconfig"
 	"github.com/rorycl/rm2pdf/rmparse"
