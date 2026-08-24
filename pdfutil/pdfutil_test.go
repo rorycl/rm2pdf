@@ -2,7 +2,7 @@ package pdfutil
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"strings"
 	"testing"
@@ -29,12 +29,12 @@ func TestInfo(t *testing.T) {
 
 // copyFile copies files
 func copyFile(inPath, outPath string) error {
-	input, err := ioutil.ReadFile(inPath)
+	input, err := os.ReadFile(inPath)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(outPath, input, 0644)
+	err = os.WriteFile(outPath, input, 0644)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func TestRotate(t *testing.T) {
 
 	testPDF := "../testfiles/e724bba2-266f-434d-aaf2-935d2b405aee.pdf"
 
-	tmpfile, err := ioutil.TempFile("", "tmppdfcopy")
+	tmpfile, err := os.CreateTemp("", "tmppdfcopy")
 	if err != nil {
 		t.Error(err)
 	}
@@ -83,7 +83,7 @@ func TestRotateCopy(t *testing.T) {
 		t.Error(err)
 	}
 
-	tmpfile, err := ioutil.TempFile("", "tmppdf")
+	tmpfile, err := os.CreateTemp("", "tmppdf")
 	if err != nil {
 		t.Error(err)
 	}

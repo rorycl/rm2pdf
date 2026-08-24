@@ -99,7 +99,7 @@ func (r *RMFileInfo) registerInsertedPages() {
 // 1      | 0       | yes      | template.pdf  |
 // 2      | 1       | no       | annotated.pdf |
 //
-// This function returns 0-indexed pdf pages
+// # This function returns 0-indexed pdf pages
 //
 // Returning an io.ReadSeeker from an fs.File is described by Ian Lance
 // Taylor at https://github.com/golang/go/issues/44175#issuecomment-775545730
@@ -191,7 +191,7 @@ type content struct {
 		Pages []struct {
 			ID string `json:"id"`
 		} `json:"pages"`
-	} `json:"cPages,omitempty"`
+	} `json:"cPages"`
 	RedirectionPageMap []int `json:"redirectionPageMap"`
 	OriginalPageCount  int   `json:"originalPageCount"`
 }

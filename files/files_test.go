@@ -7,7 +7,8 @@ RCL January 2020
 package files
 
 import (
-	"io/ioutil"
+	"io"
+
 	"os"
 	"strings"
 	"testing"
@@ -96,7 +97,7 @@ func TestFilesXochitlWithPDF(t *testing.T) {
 		// debug!
 		rmf.Debug(log)
 		w.Close()
-		s, _ := ioutil.ReadAll(r)
+		s, _ := io.ReadAll(r)
 		r.Close()
 		os.Stdout = oldStdout
 		return string(s)

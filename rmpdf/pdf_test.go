@@ -12,7 +12,6 @@ import (
 
 	colornames "golang.org/x/image/colornames"
 
-	"io/ioutil"
 	"testing"
 
 	"github.com/rorycl/rm2pdf/pdfutil"
@@ -23,7 +22,7 @@ import (
 func TestConvertWithPDF(t *testing.T) {
 
 	// make temporary file
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,7 +41,7 @@ func TestConvertWithPDF(t *testing.T) {
 func TestConvertWithoutPDF(t *testing.T) {
 
 	// make temporary file
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Error(err)
 	}
@@ -66,7 +65,7 @@ func TestConvertWithoutPDF(t *testing.T) {
 func TestConvertWithInsertedPage(t *testing.T) {
 
 	// make temporary file
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Error(err)
 	}
@@ -93,7 +92,7 @@ func TestConvertWithLandscape(t *testing.T) {
 	template := ""
 
 	// make temporary file
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Error(err)
 	}
@@ -121,7 +120,7 @@ func TestWithCustomSettings(t *testing.T) {
 	template := ""
 
 	// make temporary file
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Error(err)
 	}
@@ -130,7 +129,7 @@ func TestWithCustomSettings(t *testing.T) {
 	defer os.Remove(tname)
 
 	// write custom configuration to temporary file
-	configFile, err := ioutil.TempFile("", "config")
+	configFile, err := os.CreateTemp("", "config")
 	if err != nil {
 		t.Error(err)
 	}
@@ -168,7 +167,7 @@ func TestConvertZip(t *testing.T) {
 	template := ""
 
 	// make temporary file
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Error(err)
 	}
@@ -203,7 +202,7 @@ func TestConvertZipNoMetadata(t *testing.T) {
 	template := ""
 
 	// make temporary file
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Error(err)
 	}

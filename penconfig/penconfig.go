@@ -1,26 +1,26 @@
 // Package penconfig allows custom specification of pen strokes from a
 // yaml format file on a per-layer basis, for example
 //
-//   all:
-//     - pen:     fineliner
-//       weight:  narrow
-//       width:   0.95
-//       color:   black
-//       opacity: 0.9
+//	all:
+//	  - pen:     fineliner
+//	    weight:  narrow
+//	    width:   0.95
+//	    color:   black
+//	    opacity: 0.9
 //
-//   "1":
-//     - pen:     fineliner
-//       weight:  narrow
-//       width:   0.8
-//       color:   blue
-//       opacity: 0.8
-//
+//	"1":
+//	  - pen:     fineliner
+//	    weight:  narrow
+//	    width:   0.8
+//	    color:   blue
+//	    opacity: 0.8
 package penconfig
 
 import (
 	"fmt"
 	"image/color"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -195,13 +195,7 @@ func (lpc LayerPenConfigs) check() error {
 		for i, pen := range penList {
 
 			// check pen type
-			penOK := false
-			for _, penType := range penTypes {
-				if pen.Pen == penType {
-					penOK = true
-					break
-				}
-			}
+			penOK := slices.Contains(penTypes, pen.Pen)
 			if !penOK {
 				return fmt.Errorf(
 					"layer %s, item %d pen type %s not in\n%s",
@@ -210,13 +204,7 @@ func (lpc LayerPenConfigs) check() error {
 			}
 
 			// check pen weight (should be checked by pen type too)
-			weightOK := false
-			for _, weight := range penWeights {
-				if pen.Weight == weight {
-					weightOK = true
-					break
-				}
-			}
+			weightOK := slices.Contains(penWeights, pen.Weight)
 			if !weightOK {
 				fmt.Printf("error pen %+v\n", pen)
 				return fmt.Errorf(

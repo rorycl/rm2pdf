@@ -4,7 +4,6 @@ package penconfig
 // https://github.com/go-playground/colors or LocalColour parser
 
 import (
-	"io/ioutil"
 	"math"
 	"os"
 	"strings"
@@ -136,7 +135,7 @@ func TestNewConfigFromFile(t *testing.T) {
     color:   "#963387"
     opacity: 0.8`)
 
-	tmpFile, err := ioutil.TempFile("", "settings_")
+	tmpFile, err := os.CreateTemp("", "settings_")
 	if err != nil {
 		t.Error(err)
 	}
@@ -160,7 +159,7 @@ func TestNewConfigFromFile(t *testing.T) {
 // configuration from a yaml file
 func TestNewConfigFromFileFail(t *testing.T) {
 
-	tmpFile, err := ioutil.TempFile("", "settings_")
+	tmpFile, err := os.CreateTemp("", "settings_")
 	if err != nil {
 		t.Error(err)
 	}
