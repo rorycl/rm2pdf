@@ -7,21 +7,19 @@ per-layer colours for selected pens.
 
 ## Update
 
-`rm2pdf` does not support the new reMarkable v3 software format files,
-which produces `.rm` version 6 files.
+> [!WARNING]
+> `rm2pdf` does not support the new reMarkable v3 software format files,
+> which produces `.rm` version 6 files in CRDT format. For more info see
+> Rick Lupton's [rmscene](https://github.com/ricklupton/rmscene) in
+> Python or Lyr-7D1h's
+> [remarkable-lines](https://github.com/Lyr-7D1h/remarkable-lines) in
+> Rust.
 
-Version 0.1.6 should detect the attempted processing of the new format
-files. Version 0.1.7 is a small security fix.
-
-Support for the the new `content` metadata file format for reMarkable
-tablets using version 3 software is included for [issue
-11](https://github.com/rorycl/rm2pdf/issues/11), however the underlying
-issue is the new version 6 rm files.
-
-The status of the community work on version 6 files is set out
-[here](https://www.reddit.com/r/RemarkableTablet/comments/10hxe3j/updates_regarding_reverse_engineering_remarkable/).
+24 August 2026: tip has been moved to use the fork of `fpdf` on
+codeberg.
 
 Recent releases:
+* 0.1.6 : detect attempt to parse new format files
 * 0.1.5 : fix for missing metadata in bundles and older rmapi zip files
 * 0.1.4 : add support for rmapi zip files
 * 0.1.3 : add embedded A4 template (needs go 1.16+)
