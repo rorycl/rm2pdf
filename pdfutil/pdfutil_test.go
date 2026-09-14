@@ -2,7 +2,6 @@ package pdfutil
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"strings"
 	"testing"
